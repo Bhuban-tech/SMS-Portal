@@ -163,7 +163,7 @@ const SMSDashboard = () => {
                 <button className="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold shadow-md hover:bg-blue-700 transition whitespace-nowrap">
                   Daily Report
                 </button>
-                <button className="px-6 py-3 bg-gray-400 text-slate-700 rounded-xl font-semibold border border-gray-300 hover:bg-gray-50 transition whitespace-nowrap">
+                <button className="px-6 py-3 bg-gray-400 text-slate-700 rounded-xl font-semibold border border-gray-300 hover:bg-gray-500 transition whitespace-nowrap">
                   Monthly Report
                 </button>
               </div>
@@ -218,8 +218,7 @@ const SMSDashboard = () => {
             </div>
           )}
 
-
-          {activeTab === "groups" && (
+        {activeTab === "groups" && (
             <div className="space-y-8">
               <h2 className="text-2xl font-bold text-slate-800">Groups</h2>
               {allGroups.map((groupName) => {
@@ -338,8 +337,7 @@ const SMSDashboard = () => {
                 </div>
               </div>
 
-              
-              <div className="overflow-x-auto">
+               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-gray-50">
                     <tr>

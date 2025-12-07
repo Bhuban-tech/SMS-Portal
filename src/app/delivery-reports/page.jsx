@@ -1,72 +1,86 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-
-const DELIVERY_STATUS_OPTIONS = ['ALL', 'DELIVERED', 'FAILED'];
+import React, { useState } from "react";
 
 const SAMPLE_REPORTS = [
   {
     id: 1,
-    phone: '9800000001',
-    message: 'Hello from Sparrow SMS!',
-    status: 'DELIVERED',
-    timestamp: '2025-01-10 10:30 AM',
+    phone: "9800000001",
+    message: "Hello from Sparrow SMS!",
+    status: "DELIVERED",
+    timestamp: "2025-01-10 10:30 AM",
   },
   {
     id: 2,
-    phone: '9800000002',
-    message: 'Your OTP is 12345',
-    status: 'FAILED',
-    timestamp: '2025-01-10 10:35 AM',
+    phone: "9800000002",
+    message: "Your OTP is 12345",
+    status: "FAILED",
+    timestamp: "2025-01-10 10:35 AM",
+  },
+  {
+    id: 3,
+    phone: "9800000003",
+    message: "Reminder: Meeting at 2 PM",
+    status: "DELIVERED",
+    timestamp: "2025-01-10 11:00 AM",
   },
 ];
 
 export default function Page() {
-  const [reports, setReports] = useState(SAMPLE_REPORTS);
-  const [filter, setFilter] = useState('ALL');
-
-  const filteredReports =
-    filter === 'ALL'
-      ? reports
-      : reports.filter((r) => r.status === filter);
+  const [reports] = useState(SAMPLE_REPORTS);
 
   return (
-    <div className="p-6 text-white">
-      <h1 className="text-3xl font-bold mb-4 text-black">Delivery Reports</h1>
+    <div className="p-6 min-h-screen bg-(--bg-main)">
+      <h1 className="text-3xl font-bold mb-6 text-gray-900">
+        Delivery Reports
+      </h1>
 
-      <select
-        className="bg-slate-800 p-2 rounded mb-4"
-        value={filter}
-        onChange={(e) => setFilter(e.target.value)}
-      >
-        {DELIVERY_STATUS_OPTIONS.map((option) => (
-          <option key={option}>{option}</option>
-        ))}
-      </select>
+      {/* Card Container */}
+      <div className="overflow-x-auto card-neumorph p-5 rounded-2xl bg-(--bg-card)">
+        <table className="min-w-full text-left border border-gray-200 rounded-xl overflow-hidden">
+          <thead className="bg-(--vibrant-blue) text-white">
+            <tr>
+              <th className="px-4 py-3 text-sm font-semibold tracking-wide">
+                Phone
+              </th>
+              <th className="px-4 py-3 text-sm font-semibold tracking-wide">
+                Message
+              </th>
+              <th className="px-4 py-3 text-sm font-semibold tracking-wide">
+                Status
+              </th>
+              <th className="px-4 py-3 text-sm font-semibold tracking-wide">
+                Time
+              </th>
+            </tr>
+          </thead>
 
-      <div className="space-y-3">
-        {filteredReports.map((r) => (
-          <div
-            key={r.id}
-            className="p-4 bg-slate-900 rounded-lg border border-slate-700"
-          >
-            <p><strong>Phone:</strong> {r.phone}</p>
-            <p><strong>Message:</strong> {r.message}</p>
-            <p>
-              <strong>Status:</strong>{' '}
-              <span
-                className={
-                  r.status === 'DELIVERED'
-                    ? 'text-green-400'
-                    : 'text-red-400'
-                }
+          <tbody>
+            {reports.map((r) => (
+              <tr
+                key={r.id}
+                className="bg-(--bg-card) hover:bg-slate-100 transition-all border-b border-gray-200"
               >
-                {r.status}
-              </span>
-            </p>
-            <p><strong>Time:</strong> {r.timestamp}</p>
-          </div>
-        ))}
+                <td className="px-4 py-3">{r.phone}</td>
+                <td className="px-4 py-3">{r.message}</td>
+
+                <td className="px-4 py-3">
+                  <span
+                    className={`font-semibold ${
+                      r.status === "DELIVERED"
+                        ? "text-(--success)"
+                        : "text-red-500"
+                    }`}
+                  >
+                    {r.status}
+                  </span>
+                </td>
+
+                <td className="px-4 py-3">{r.timestamp}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
