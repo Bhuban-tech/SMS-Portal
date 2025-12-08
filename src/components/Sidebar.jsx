@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { MessageSquare, Users, LayoutDashboard, Settings, UsersRound, FileText, File } from 'lucide-react';
+import { MessageSquare, Users, LayoutDashboard, Settings, UsersRound, FileText, File, FileTextIcon, PenIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen, activeTab, setActiveTab }) => {
@@ -9,11 +9,13 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, activeTab, setActiveTab }) => {
 
   const menuItems = [
     { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { id: 'messages', icon: MessageSquare, label: 'Individual Contacts' },
+    // { id: 'messages', icon: MessageSquare, label:'Individual Contacts' },
+    {id:"messages", icon:MessageSquare, label:"Individual Contacts"},
     { id: 'batch', icon: File, label: 'SMS Files' },
     { id: 'groups', icon: UsersRound, label: 'Groups' },
     { id: 'contact-list', icon: UsersRound, label: 'Contact List' },
     { id: 'delivery-reports', icon: FileText, label: 'Delivery Reports' }, 
+    {id: 'balance-report',icon: PenIcon, label: 'Balance Report'},
   ];
 
   return (

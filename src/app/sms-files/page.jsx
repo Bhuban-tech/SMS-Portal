@@ -11,7 +11,7 @@ function SMSFilesPage() {
          createdAt:"2025/07/24 - 7:50:55 pm"
         },
 
-         {sn:1,
+         {sn:2,
          author:"Aadim National College",
          fileName: "SEE-Student",
          fileType:"csv",
@@ -19,7 +19,7 @@ function SMSFilesPage() {
          createdAt:"2025/07/24 - 7:50:55 pm"
         },
 
-         {sn:1,
+         {sn:3,
          author:"Aadim National College",
          fileName: "SEE-Student",
          fileType:"csv",
@@ -27,7 +27,21 @@ function SMSFilesPage() {
          createdAt:"2025/07/24 - 7:50:55 pm"
         },
 
-         {sn:1,
+         {sn:4,
+         author:"Aadim National College",
+         fileName: "SEE-Student",
+         fileType:"csv",
+         size:"50.03 KB",
+         createdAt:"2025/07/24 - 7:50:55 pm"
+        },
+        {sn:5,
+         author:"Aadim National College",
+         fileName: "SEE-Student",
+         fileType:"csv",
+         size:"50.03 KB",
+         createdAt:"2025/07/24 - 7:50:55 pm"
+        },
+        {sn:6,
          author:"Aadim National College",
          fileName: "SEE-Student",
          fileType:"csv",
@@ -39,7 +53,7 @@ function SMSFilesPage() {
   <div className="p-6 w-full space-y-4">
     <h1 className="text-2xl font-semibold">SMS Files</h1>
 
-    {/* 🔍 SEARCH + BUTTONS */}
+ 
     <div className="flex justify-between items-center">
       <div className="relative w-72">
         <input
@@ -53,7 +67,7 @@ function SMSFilesPage() {
       </div>
 
       <div className="flex gap-3">
-        <button className="rounded-xl px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 cursor-pointer">
+        <button className="rounded-xl px-4 py-2 bg-blue-500 text-white hover:bg-blue-700 cursor-pointer">
           ADD FILES
         </button>
 
@@ -67,10 +81,10 @@ function SMSFilesPage() {
       </div>
     </div>
 
-  \
+  
     <div className="rounded-2xl shadow-sm border overflow-x-auto">
       <table className="w-full text-sm">
-        <thead className="bg-gray-100 text-gray-600">
+        <thead className="bg-gray-400 text-gray-900">
           <tr>
             <th className="p-3 text-center">S.N</th>
             <th className="p-3 text-center">Author</th>

@@ -1,12 +1,14 @@
 // import GroupsTable from "@/components/contact/group";
 // import GroupsTable from "@/components/contact/group";
-import { Search, Plus, Eye, Edit, Delete, DeleteIcon } from "lucide-react";
+import { Search, Plus, Eye, Edit, Delete, DeleteIcon, Trash } from "lucide-react";
 
 function GroupPage() {
     const groups=[
         {id:1, name:"BCA 2080 Batch", total:0},
         {id:2, name:"BCA 2079 Batch", total:0},
         {id:3, name:"BCA 2078 Batch", total:0},
+        {id:4, name:"BCA 2077 Batch", total:0},
+        {id:5, name:"BCA 2076 Batch", total:0},
 
     ];
     return(
@@ -51,7 +53,7 @@ function GroupPage() {
                                 <button className="bg-blue-400 text-white px-2 py-1 rounded cursor-pointer hover:bg-blue-800"><Plus className="w-4 h-4" /></button>
                                 <button className="bg-gray-300 px-2 py-1 rounded cursor-pointer hover:bg-gray-600"><Eye className="w-4 h-4" /></button>
                                 <button className="bg-green-400 text-white px-2 py-1 rounded cursor-pointer hover:bg-green-800">  <Edit className="w-4 h-4" /></button>
-                                <button className="bg-red-300 text-white px-2 py-1 rounded cursor-pointer hover:bg-red-600"> <DeleteIcon className="w-4 h-4" /></button>
+                                <button className="bg-red-300 text-white px-2 py-1 rounded cursor-pointer hover:bg-red-600"> <Trash className="w-4 h-4" /></button>
                                </td>
                                </tr>
                         ))}

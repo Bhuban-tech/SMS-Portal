@@ -13,6 +13,7 @@ import SMSTypePieChart from "./SMSTypePieChart";
 import TopRecipients from "./TopRecipients";
 import GroupPage from "@/app/contacts/group/page";
 import SMSFilesPage from "@/app/sms-files/page";
+import BalanceReportPage from "@/app/balance-report/page";
 
 
 const contactsData = [
@@ -221,6 +222,7 @@ const SMSDashboard = () => {
           )}
         {activeTab === "groups" && <GroupPage />}
         {activeTab === "batch" && <SMSFilesPage />}
+        {activeTab === "balance-report" && <BalanceReportPage />}
 
        
 
