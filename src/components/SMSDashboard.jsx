@@ -269,7 +269,7 @@ const SMSDashboard = () => {
           )}
 
           
-          {activeTab === "delivery-reports" && (
+      {activeTab === "delivery-reports" && (
             <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
               <div className="p-6 border-b border-gray-200">
                 <h2 className="text-2xl font-bold text-slate-800">Delivery Reports</h2>

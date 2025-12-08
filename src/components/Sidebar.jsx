@@ -1,21 +1,41 @@
 "use client";
 
-import React from 'react';
-import { MessageSquare, Users, LayoutDashboard, Settings, UsersRound, FileText, File, FileTextIcon, PenIcon } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import React from "react";
+import {
+  MessageSquare,
+  Users,
+  LayoutDashboard,
+  Settings,
+  UsersRound,
+  FileText,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen, activeTab, setActiveTab }) => {
   const router = useRouter();
 
   const menuItems = [
-    { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    // { id: 'messages', icon: MessageSquare, label:'Individual Contacts' },
-    {id:"messages", icon:MessageSquare, label:"Individual Contacts"},
-    { id: 'batch', icon: File, label: 'SMS Files' },
-    { id: 'groups', icon: UsersRound, label: 'Groups' },
-    { id: 'contact-list', icon: UsersRound, label: 'Contact List' },
-    { id: 'delivery-reports', icon: FileText, label: 'Delivery Reports' }, 
-    {id: 'balance-report',icon: PenIcon, label: 'Balance Report'},
+    { id: "dashboard", icon: LayoutDashboard, label: "Dashboard", path: "/" },
+    {
+      id: "contacts",
+      icon: MessageSquare,
+      label: "Individual Contacts",
+      path: "/contacts/individual_contact",
+    },
+    { id: "batch", icon: Users, label: "SMS Batch", path: "/batch" },
+    { id: "groups", icon: UsersRound, label: "Groups", path: "/groups" },
+    {
+      id: "contact-list",
+      icon: UsersRound,
+      label: "Contact List",
+      path: "/contact-list",
+    },
+    {
+      id: "delivery-reports",
+      icon: FileText,
+      label: "Delivery Reports",
+      path: "/delivery-reports",
+    },
   ];
 
   return (
@@ -29,7 +49,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, activeTab, setActiveTab }) => {
 
       <div
         className={`
-          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+          ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
           lg:translate-x-0 fixed lg:relative w-64 
           bg-linear-to-b from-slate-900 via-slate-800 to-slate-900 
           p-6 h-full z-40 transition-transform duration-300 ease-in-out shadow-2xl
@@ -48,17 +68,17 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, activeTab, setActiveTab }) => {
               <button
                 key={item.id}
                 onClick={() => {
-                  if (item.id === 'delivery-reports') {
-                    router.push('/delivery-reports');
+                  if (item.path) {
+                    router.push(item.path);
                   } else {
                     setActiveTab(item.id);
                   }
                   setSidebarOpen(false);
                 }}
                 className={`flex items-center gap-3 w-full px-4 py-3 rounded-lg transition-all duration-200 ${
-                  isActive
-                    ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/30'
-                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                  activeTab === item.id
+                    ? "bg-teal-500 text-white shadow-lg shadow-teal-500/30"
+                    : "text-slate-300 hover:bg-slate-800 hover:text-white"
                 }`}
               >
                 <Icon size={20} />
