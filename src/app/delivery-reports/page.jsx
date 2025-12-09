@@ -1,377 +1,165 @@
 "use client";
 
 import React, { useState } from "react";
-import {
-  Search,
-  Upload,
-  Send,
-  Eye,
-  Edit2,
-  ChevronLeft,
-  ChevronRight,
-  X,
-  Trash2,
-} from "lucide-react";
-
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
+import { Eye, Trash2, X } from "lucide-react";
 
-export default function SMSReportDashboard() {
+export default function DeliveryReports() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("delivery-reports");
+
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
-  const [dateFilter, setDateFilter] = useState("");
-
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedSMS, setSelectedSMS] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-
+  const [viewSMS, setViewSMS] = useState(null); 
   const itemsPerPage = 10;
 
   const smsData = [
-    {
-      id: 1,
-      user: "Aadmin National College",
-      sentFrom: "Kri_Alert",
-      mobileNumber: "9828827258",
-      status: "Ncell",
-      message:
-        "Holiday Tommorrow for all students of Aadmin College, IT Dept",
-      totalSmsCount: 2,
-      sentAt: "2025/07/24 08:05:48 PM",
-    },
-    {
-      id: 2,
-      user: "Aadmin National College",
-      sentFrom: "Aadim_Alert",
-      mobileNumber: "9826988980",
-      status: "Ntc",
-      message:
-        "Holiday Tommorrow for all students of Aadmin College, IT Dept",
-      totalSmsCount: 2,
-      sentAt: "2025/07/24 08:05:46 PM",
-    },
-    {
-      id: 3,
-      user: "Aadmin National College",
-      sentFrom: "Kri_Alert",
-      mobileNumber: "9824754558",
-      status: "Ntc",
-      message:
-        "Holiday Tommorrow for all students of Aadmin College, IT Dept",
-      totalSmsCount: 2,
-      sentAt: "2025/07/24 08:05:45 PM",
-    },
+    { id: 1, user: "Aadim National College", sentFrom: "Kri_Alert", mobileNumber: "9828827258", status: "Ncell", message: "Holiday Tomorrow for all students of Aadim College, IT Dept", totalSmsCount: 2, sentAt: "2025/07/24 08:05:48 PM" },
+    { id: 2, user: "Aadim National College", sentFrom: "Aadim_Alert", mobileNumber: "9826988980", status: "Ntc", message: "Holiday Tomorrow for all students of Aadim College, IT Dept", totalSmsCount: 2, sentAt: "2025/07/24 08:05:46 PM" },
+    { id: 3, user: "Aadim National College", sentFrom: "Kri_Alert", mobileNumber: "9824754558", status: "Ntc", message: "Holiday Tomorrow for all students of Aadim College, IT Dept", totalSmsCount: 2, sentAt: "2025/07/24 08:05:45 PM" },
   ];
 
+  const filteredData = smsData.filter((item) => {
+    const searchMatch =
+      item.user.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.mobileNumber.includes(searchTerm);
 
-  const getFilteredData = () => {
-    let filtered = [...smsData];
+    const typeMatch =
+      filterType === "all" || item.status.toLowerCase() === filterType.toLowerCase();
 
-
-    if (searchTerm.trim()) {
-      filtered = filtered.filter(
-        (item) =>
-          item.mobileNumber.includes(searchTerm) ||
-          item.user.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-
-    if (filterType !== "all") {
-      filtered = filtered.filter((item) =>
-        item.status.toLowerCase().includes(filterType.toLowerCase())
-      );
-    }
-
-    if (dateFilter) {
-      filtered = filtered.filter((item) => item.sentAt.includes(dateFilter));
-    }
-
-    return filtered;
-  };
-
-  const filteredData = getFilteredData();
+    return searchMatch && typeMatch;
+  });
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage);
 
-  const goToPage = (page) => {
-    if (page >= 1 && page <= totalPages) setCurrentPage(page);
-  };
-
-
-  const handleView = (sms) => {
-    setSelectedSMS(sms);
-    setShowModal(true);
-  };
-
-  const handleEdit = (smsId) => {
-    console.log("Edit SMS:", smsId);
-  };
-
-  const handleDelete = (smsId) => {
-    if (confirm("Are you sure you want to delete?")) {
-      console.log("Delete:", smsId);
-    }
-  };
-
-
-  const handleExport = () => {
-    const csv = [
-      ["S.N.", "User", "Sent From", "Mobile Number", "Message", "Total SMS Count", "Sent At"],
-      ...filteredData.map((item, index) => [
-        index + 1,
-        item.user,
-        item.sentFrom,
-        item.mobileNumber,
-        item.message,
-        item.totalSmsCount,
-        item.sentAt,
-      ]),
-    ]
-      .map((row) => row.map((cell) => `"${cell}"`).join(","))
-      .join("\n");
-
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-
-  };
-
-  const resetFilters = () => {
-    setSearchTerm("");
-    setFilterType("all");
-    setDateFilter("");
-    setCurrentPage(1);
-  };
-
   return (
     <div className="flex h-screen bg-gray-50">
-      <Sidebar />
+      <Sidebar
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+      />
 
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden p-6">
         <Header />
 
-        <main className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-7xl mx-auto">
+        <main className="flex-1 overflow-y-auto p-6 space-y-6">
 
-            <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
-              <div className="flex items-center justify-between mb-4">
-                <h1 className="text-xl font-semibold"></h1>
-
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleExport}
-                    className="flex items-center gap-2 px-4 py-2 border rounded text-sm hover:bg-gray-100"
-                  >
-                    <Upload className="w-4 h-4" /> 
-                  </button>
-
-                  <button
-                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-sm"
-                  >
-                    <Send className="w-4 h-4" /> Share
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex gap-4 flex-wrap">
         
-                <div className="flex items-center gap-2">
-                  <span className="text-sm"> Filter By date</span>
-                  <input
-                    type="date"
-                    value={dateFilter}
-                    onChange={(e) => setDateFilter(e.target.value)}
-                    className="px-3 py-2 border rounded text-sm"
-                  />
-                </div>
-                <div className="relative flex-1 min-w-[250px]">
-                  <input
-                    type="text"
-                    placeholder="Search by mobile number"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full px-3 py-2 border rounded text-sm pr-10"
-                  />
-                  <Search className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2" />
-                </div>
+          <div className="flex flex-col md:flex-row gap-4">
+            <input
+              type="text"
+              placeholder="Search by mobile number..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="border bg-white px-4 py-2 rounded-xl shadow-sm outline-none w-full md:w-1/3"
+            />
 
-              
-                {(searchTerm || dateFilter || filterType !== "all") && (
-                  <button onClick={resetFilters} className="text-sm text-gray-600">
-                    Reset
-                  </button>
-                )}
-              </div>
+            <select
+              className="border bg-white px-4 py-2 rounded-xl shadow-sm w-full md:w-1/4"
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+            >
+              <option value="all">All Status</option>
+              <option value="ncell">Ncell</option>
+              <option value="ntc">Ntc</option>
+            </select>
+          </div>
 
-              <p className="mt-3 text-sm text-gray-600">
-                Showing {currentData.length} of {filteredData.length} records
-              </p>
-            </div>
+         
+          <div className="bg-white rounded-2xl shadow-xl overflow-x-auto">
+            <table className="w-full text-sm text-center">
+              <thead className="bg-teal-700 text-white">
+                <tr>
+                  <th className="p-3">S.N</th>
+                  <th className="p-3">User</th>
+                  <th className="p-3">Sent From</th>
+                  <th className="p-3">Mobile</th>
+                  <th className="p-3">Status</th>
+                  <th className="p-3">Message</th>
+                  <th className="p-3">Sent At</th>
+                  <th className="p-3">Actions</th>
+                </tr>
+              </thead>
 
-            <div className="bg-white rounded-lg overflow-hidden shadow-sm">
-              {filteredData.length === 0 ? (
-                <p className="text-center py-10 text-gray-500">No records found</p>
-              ) : (
-                <>
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead className="bg-indigo-50">
-                        <tr>
-                          {["S.N.", "User", "Sent From", "Mobile", "Message", "Count", "Sent At", "Actions"].map(
-                            (h) => (
-                              <th
-                                key={h}
-                                className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase"
-                              >
-                                {h}
-                              </th>
-                            )
-                          )}
-                        </tr>
-                      </thead>
+              <tbody>
+                {currentData.map((sms, idx) => (
+                  <tr key={sms.id} className="border-b hover:bg-gray-100 transition">
+                    <td className="p-3">{startIndex + idx + 1}</td>
+                    <td className="p-3">{sms.user}</td>
+                    <td className="p-3">{sms.sentFrom}</td>
+                    <td className="p-3">{sms.mobileNumber}</td>
+                    <td className="p-3">{sms.status}</td>
+                    <td className="p-3">{sms.message}</td>
+                    <td className="p-3">{sms.sentAt}</td>
 
-                      <tbody className="divide-y">
-                        {currentData.map((item, index) => (
-                          <tr key={item.id} className="hover:bg-gray-50">
-                            <td className="px-4 py-3">{startIndex + index + 1}</td>
-                            <td className="px-4 py-3">{item.user}</td>
-                            <td className="px-4 py-3">{item.sentFrom}</td>
-
-                            <td className="px-4 py-3">
-                              <div>{item.mobileNumber}</div>
-                              <div className="text-xs text-gray-500">{item.status}</div>
-                            </td>
-
-                            <td className="px-4 py-5 max-w-md line-clamp-2">
-                              {item.message}
-                            </td>
-
-                            <td className="px-4 py-3 text-center">
-                              {item.totalSmsCount}
-                            </td>
-
-                            <td className="px-4 py-3 whitespace-nowrap">
-                              {item.sentAt}
-                            </td>
-
-                            <td className="px-4 py-3">
-                              <div className="flex gap-2">
-                                <button
-                                  onClick={() => handleView(item)}
-                                  className="p-1 text-gray-400 hover:text-blue-600"
-                                >
-                                  <Eye className="w-4 h-4" />
-                                </button>
-
-                                <button
-                                  onClick={() => handleEdit(item.id)}
-                                  className="p-1 text-gray-400 hover:text-green-600"
-                                >
-                                  <Edit2 className="w-4 h-4" />
-                                </button>
-
-                                <button
-                                  onClick={() => handleDelete(item.id)}
-                                  className="p-1 text-gray-400 hover:text-red-600"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {totalPages > 1 && (
-                    <div className="flex justify-between p-4 border-t">
-                      <span className="text-sm">Page {currentPage} of {totalPages}</span>
-
-                      <div className="flex gap-2">
+                    <td className="p-3">
+                      <div className="flex justify-center gap-3">
                         <button
-                          onClick={() => goToPage(currentPage - 1)}
-                          disabled={currentPage === 1}
-                          className="px-3 py-1 border rounded disabled:opacity-50"
+                          onClick={() => setViewSMS(sms)}
+                          className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-full shadow"
                         >
-                          <ChevronLeft className="w-4 h-4" />
+                          <Eye className="w-4 h-4" />
                         </button>
 
-                        {[...Array(totalPages)].map((_, i) => {
-                          const page = i + 1;
-                          return (
-                            <button
-                              key={page}
-                              onClick={() => goToPage(page)}
-                              className={`px-3 py-1 border rounded ${
-                                currentPage === page
-                                  ? "bg-indigo-600 text-white"
-                                  : "hover:bg-gray-100"
-                              }`}
-                            >
-                              {page}
-                            </button>
-                          );
-                        })}
-
-                        <button
-                          onClick={() => goToPage(currentPage + 1)}
-                          disabled={currentPage === totalPages}
-                          className="px-3 py-1 border rounded disabled:opacity-50"
-                        >
-                          <ChevronRight className="w-4 h-4" />
+                        <button className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow">
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+       <div className="flex justify-end items-center gap-2 mt-4">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+              className="px-4 py-2 bg-white border rounded-xl shadow hover:bg-gray-100"
+            >
+              Prev
+            </button>
+
+            <span className="px-4 py-2 bg-white border rounded-xl shadow">{currentPage}</span>
+
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+              className="px-4 py-2 bg-white border rounded-xl shadow hover:bg-gray-100"
+            >
+              Next
+            </button>
           </div>
         </main>
       </div>
 
+  
+      {viewSMS && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
+            <button
+              onClick={() => setViewSMS(null)}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+            >
+              <X size={20} />
+            </button>
 
-      {showModal && selectedSMS && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white w-full max-w-2xl rounded-lg shadow-lg overflow-y-auto max-h-[90vh]">
+            <h2 className="text-xl font-bold mb-4">SMS Details</h2>
 
-            <div className="flex justify-between p-4 border-b">
-              <h2 className="text-lg font-semibold">SMS Details</h2>
-              <button onClick={() => setShowModal(false)} className="p-1">
-                <X className="w-5 h-5" />
-              </button>
+            <div className="space-y-2 text-left">
+              <p><strong>User:</strong> {viewSMS.user}</p>
+              <p><strong>Sent From:</strong> {viewSMS.sentFrom}</p>
+              <p><strong>Mobile Number:</strong> {viewSMS.mobileNumber}</p>
+              <p><strong>Status:</strong> {viewSMS.status}</p>
+              <p><strong>Message:</strong> {viewSMS.message}</p>
+              <p><strong>Total SMS Count:</strong> {viewSMS.totalSmsCount}</p>
+              <p><strong>Sent At:</strong> {viewSMS.sentAt}</p>
             </div>
-
-            <div className="p-6 space-y-4">
-              {[
-                ["User", selectedSMS.user],
-                ["Sent From", selectedSMS.sentFrom],
-                ["Mobile Number", selectedSMS.mobileNumber],
-                ["Status", selectedSMS.status],
-                ["Message", selectedSMS.message],
-                ["Total SMS Count", selectedSMS.totalSmsCount],
-                ["Sent At", selectedSMS.sentAt],
-              ].map(([label, value]) => (
-                <div key={label}>
-                  <label className="text-sm font-medium text-gray-600">{label}</label>
-                  <p className="mt-1">{value}</p>
-                </div>
-              ))}
-            </div>
-
-            <div className="p-4 border-t text-right">
-              <button
-                onClick={() => setShowModal(false)}
-                className="px-4 py-2 border rounded hover:bg-gray-100"
-              >
-                Close
-              </button>
-            </div>
-
           </div>
         </div>
       )}

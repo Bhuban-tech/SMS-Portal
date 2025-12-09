@@ -1,11 +1,10 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { Plus, Upload, X, Trash, Edit, Send } from "lucide-react";
+import { Plus, Upload, X, Trash, Edit, Send, Eye } from "lucide-react";
 import Papa from "papaparse";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
-
 
 const contactsDataInitial = [
   { id: 1, name: "Bhuban", mobile: "9851579340", groups: ["BIT", "CSIT", "BCA"] },
@@ -19,7 +18,16 @@ const ContactsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingContact, setEditingContact] = useState(null);
-  const [newContact, setNewContact] = useState({ name: "", mobile: "", groups: "" });
+  const [viewContact, setViewContact] = useState(null); // For view modal
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("contacts");
+
+  const [newContact, setNewContact] = useState({
+    name: "",
+    mobile: "",
+    groups: "",
+  });
+
   const fileInputRef = useRef(null);
 
   const filteredContacts = contactsData.filter((c) => {
@@ -33,8 +41,8 @@ const ContactsPage = () => {
 
   const openAddModal = () => {
     setEditingContact(null);
-    setNewContact({ name: "", mobile: "", groups: "" });
     setModalOpen(true);
+    setNewContact({ name: "", mobile: "", groups: "" });
   };
 
   const openEditModal = (contact) => {
@@ -47,13 +55,20 @@ const ContactsPage = () => {
     setModalOpen(true);
   };
 
+  const openViewModal = (contact) => {
+    setViewContact(contact);
+  };
+
   const handleSaveContact = () => {
     if (!newContact.name || !newContact.mobile) {
-      alert("Please fill in Name and Mobile Number");
+      alert("Please enter Name & Mobile Number");
       return;
     }
 
-    const groupsArray = newContact.groups.split(",").map((g) => g.trim()).filter(Boolean);
+    const groupsArray = newContact.groups
+      .split(",")
+      .map((g) => g.trim())
+      .filter(Boolean);
 
     if (editingContact !== null) {
       setContactsData((prev) =>
@@ -64,17 +79,18 @@ const ContactsPage = () => {
         )
       );
     } else {
-      const newId = contactsData.length ? contactsData[contactsData.length - 1].id + 1 : 1;
+      const newId = contactsData.length
+        ? contactsData[contactsData.length - 1].id + 1
+        : 1;
       setContactsData([...contactsData, { id: newId, name: newContact.name, mobile: newContact.mobile, groups: groupsArray }]);
     }
 
     setModalOpen(false);
     setEditingContact(null);
-    setNewContact({ name: "", mobile: "", groups: "" });
   };
 
   const handleDeleteContact = (id) => {
-    if (confirm("Are you sure you want to delete this contact?")) {
+    if (confirm("Delete this contact?")) {
       setContactsData((prev) => prev.filter((c) => c.id !== id));
     }
   };
@@ -90,7 +106,7 @@ const ContactsPage = () => {
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
-      complete: function (results) {
+      complete: (results) => {
         const newContacts = results.data.map((row, index) => ({
           id: contactsData.length + index + 1,
           name: row.name,
@@ -101,7 +117,7 @@ const ContactsPage = () => {
         setContactsData((prev) => [...prev, ...newContacts]);
         alert(`${newContacts.length} contacts uploaded successfully!`);
       },
-      error: function (err) {
+      error: (err) => {
         console.error(err);
         alert("Error parsing CSV file.");
       },
@@ -109,85 +125,109 @@ const ContactsPage = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100">
-     
-      <Sidebar/>
+    <div className="flex h-screen bg-gray-50">
+      <Sidebar
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+      />
 
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header/>
+      <div className="flex-1 flex flex-col overflow-hidden p-6">
+        <Header />
 
-  
-        <main className="p-6 overflow-auto">
-          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-            <div className="p-6 border-b border-gray-200 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <h1 className="text-2xl font-bold text-slate-800">Individual Contacts</h1>
+        <main className="flex-1 mt-7 overflow-auto">
+          <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+            {/* Top Controls */}
+            <div className="p-6 border-b flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-2 ml-auto">
                 <input
                   type="text"
                   placeholder="Search..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-48 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm"
+                  className="w-48 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500"
                 />
+
                 <button
                   onClick={openAddModal}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition text-sm cursor-pointer"
+                  className="flex items-center gap-2 px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 shadow"
                 >
                   <Plus size={16} /> Add Contact
                 </button>
-                <input type="file" accept=".csv" onChange={handleCSVUpload} className="hidden" ref={fileInputRef} />
+
+                <input
+                  type="file"
+                  accept=".csv"
+                  ref={fileInputRef}
+                  onChange={handleCSVUpload}
+                  className="hidden"
+                />
+
                 <button
                   onClick={() => fileInputRef.current.click()}
-                  className="flex items-center gap-2 px-2 py-2 transition text-sm cursor-pointer"
+                  className="px-3 py-2 border rounded hover:bg-gray-100 shadow flex items-center gap-2"
                 >
                   <Upload size={16} />
                 </button>
               </div>
             </div>
 
+            {/* Table */}
             <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50">
+              <table className="w-full text-sm text-center">
+                <thead className="bg-teal-700 text-white">
                   <tr>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">S.N</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Name</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Mobile Number</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Groups</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Actions</th>
+                    <th className="p-3">S.N</th>
+                    <th className="p-3">Name</th>
+                    <th className="p-3">Mobile Number</th>
+                    <th className="p-3">Groups</th>
+                    <th className="p-3">Actions</th>
                   </tr>
                 </thead>
+
                 <tbody>
                   {filteredContacts.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
+                      <td colSpan={5} className="p-12 text-gray-500 text-center">
                         No contacts found.
                       </td>
                     </tr>
                   ) : (
-                    filteredContacts.map((contact) => (
-                      <tr key={contact.id} className="hover:bg-gray-50 border-b">
-                        <td className="px-6 py-4 text-sm">{contact.id}</td>
-                        <td className="px-6 py-4 text-sm font-medium">{contact.name}</td>
-                        <td className="px-6 py-4 text-sm">{contact.mobile}</td>
-                        <td className="px-6 py-4 text-sm text-gray-600">{contact.groups.join(", ")}</td>
-                        <td className="px-6 py-4 text-sm flex gap-2">
+                    filteredContacts.map((contact, idx) => (
+                      <tr key={contact.id} className={idx % 2 === 0 ? "bg-white" : "bg-gray-100"}>
+                        <td className="p-3">{idx + 1}</td>
+                        <td className="p-3 font-medium">{contact.name}</td>
+                        <td className="p-3">{contact.mobile}</td>
+                        <td className="p-3 text-gray-600">{contact.groups.join(", ")}</td>
+
+                        <td className="p-3 flex justify-center gap-2">
+                          <button
+                            onClick={() => openViewModal(contact)}
+                            className="px-2 py-1 bg-green-500 text-white rounded-full hover:bg-green-600 shadow flex items-center gap-1"
+                          >
+                            <Eye size={16} />
+                          </button>
+
                           <button
                             onClick={() => openEditModal(contact)}
-                            className="flex items-center gap-1 px-2 py-1 text-white rounded bg-blue-500 hover:bg-blue-600 transition cursor-pointer"
+                            className="px-2 py-1 bg-blue-500 text-white rounded-full hover:bg-blue-600 shadow flex items-center gap-1"
                           >
-                            <Edit size={16} /> Edit
+                            <Edit size={16} />
                           </button>
+
                           <button
                             onClick={() => handleDeleteContact(contact.id)}
-                            className="flex items-center gap-1 px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition cursor-pointer"
+                            className="px-2 py-1 bg-red-500 text-white rounded-full hover:bg-red-600 shadow flex items-center gap-1"
                           >
-                            <Trash size={16} /> Delete
+                            <Trash size={16} />
                           </button>
+
                           <button
                             onClick={() => handleSendSMS(contact)}
-                            className="flex items-center gap-1 px-2 py-1 bg-teal-500 text-white rounded hover:bg-teal-600 transition cursor-pointer"
+                            className="px-2 py-1 bg-teal-500 text-white rounded-full hover:bg-teal-600 shadow flex items-center gap-1"
                           >
-                            <Send size={15} /> Send SMS
+                            <Send size={16} />
                           </button>
                         </td>
                       </tr>
@@ -198,45 +238,74 @@ const ContactsPage = () => {
             </div>
           </div>
 
-
+          {/* Add/Edit Modal */}
           {modalOpen && (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-              <div className="bg-white rounded-2xl p-6 w-full max-w-md relative shadow-2xl">
+              <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
                 <button
-                  className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 cursor-pointer"
                   onClick={() => setModalOpen(false)}
+                  className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
                 >
                   <X size={20} />
                 </button>
-                <h2 className="text-xl font-bold mb-4">{editingContact !== null ? "Edit Contact" : "Add New Contact"}</h2>
+
+                <h2 className="text-xl font-bold mb-4">
+                  {editingContact !== null ? "Edit Contact" : "Add New Contact"}
+                </h2>
+
                 <div className="space-y-4">
                   <input
                     type="text"
                     placeholder="Name"
                     value={newContact.name}
                     onChange={(e) => setNewContact({ ...newContact, name: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500"
                   />
+
                   <input
                     type="text"
                     placeholder="Mobile Number"
                     value={newContact.mobile}
                     onChange={(e) => setNewContact({ ...newContact, mobile: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500"
                   />
+
                   <input
                     type="text"
                     placeholder="Groups (comma separated)"
                     value={newContact.groups}
                     onChange={(e) => setNewContact({ ...newContact, groups: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500"
                   />
+
                   <button
                     onClick={handleSaveContact}
-                    className="w-full py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition cursor-pointer"
+                    className="w-full py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600"
                   >
                     {editingContact !== null ? "Save Changes" : "Save Contact"}
                   </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* View Modal */}
+          {viewContact && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
+                <button
+                  onClick={() => setViewContact(null)}
+                  className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+                >
+                  <X size={20} />
+                </button>
+
+                <h2 className="text-xl font-bold mb-4">Contact Details</h2>
+
+                <div className="space-y-2 text-left">
+                  <p><strong>Name:</strong> {viewContact.name}</p>
+                  <p><strong>Mobile:</strong> {viewContact.mobile}</p>
+                  <p><strong>Groups:</strong> {viewContact.groups.join(", ")}</p>
                 </div>
               </div>
             </div>
