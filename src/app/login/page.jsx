@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { API_BASE_URL, ENDPOINTS } from "@/config/api";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -16,14 +17,14 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const res = await fetch("http://localhost:8080/api/auth/login", {
+      const res = await fetch(`${API_BASE_URL}${ENDPOINTS.LOGIN}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          username: email,
-          password: password,
+          username, 
+          password,
         }),
       });
 
@@ -36,10 +37,7 @@ export default function LoginPage() {
       }
 
       localStorage.setItem("token", data.data.token);
-
-
-      router.push("/");
-
+      router.push("/dashboard");
       setLoading(false);
     } catch (err) {
       setError("Something went wrong. Try again.");
@@ -56,19 +54,17 @@ export default function LoginPage() {
         </h1>
 
         {error && (
-          <p className="text-red-600 text-center mb-4 font-semibold">
-            {error}
-          </p>
+          <p className="text-red-600 text-center mb-4 font-semibold">{error}</p>
         )}
 
         <form onSubmit={handleLogin} className="space-y-6">
           <div>
-            <label className="block text-gray-600 font-bold mb-2">Email</label>
+            <label className="block text-gray-600 font-bold mb-2">Username</label>
             <input
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              placeholder="Enter your username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               className="w-full p-3 rounded-xl border border-teal-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 focus:outline-none text-gray-700 placeholder-gray-400 transition"
             />
           </div>
