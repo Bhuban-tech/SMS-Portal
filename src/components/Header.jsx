@@ -1,39 +1,47 @@
 "use client";
-import React from 'react';
-import { Users } from 'lucide-react';
+import React from "react";
+import { Users } from "lucide-react";
 
-const Header = ({ 
-  title = "SMS Dashboard", 
+const Header = ({
+  title = "SMS Dashboard",
   collegeName = "Aadim national college",
-  balance 
+  balance,
 }) => {
   return (
-    <header className="w-full bg-white rounded-xl shadow-md p-4 lg:p-5">
+    <header className="
+      w-full 
+     
+      shadow-lg 
+      px-6 py-4 
+      bg-slate-800    
+    ">
       <div className="flex items-center justify-between">
-        
-        <h1 className="text-lg font-semibold text-slate-700">
+
+      
+        <h1 className="text-xl font-semibold text-white">
           {title}
         </h1>
 
-       
+        
         <div className="flex items-center gap-4">
-          <div className="text-right">
-            <p className="text-sm font-medium text-slate-600 leading-tight">
-              {collegeName}
-            </p>
+
+         
+          <div className="text-right text-white">
+            <p className="text-sm font-medium">{collegeName}</p>
             {balance && (
-              <p className="text-xs text-slate-500 mt-0.5">
-                Rs. {balance.toLocaleString()}
-              </p>
+              <p className="text-xs mt-0.5">Rs. {balance.toLocaleString()}</p>
             )}
           </div>
 
-          <div 
-            className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center shrink-0"
-            role="img"
-            aria-label="User profile"
-          >
-            <Users className="text-white" size={18} />
+     
+          <div className="
+            w-10 h-10 
+            rounded-full 
+            bg-teal-500 
+            flex items-center justify-center
+            shadow-md
+          ">
+            <Users className="text-white" size={20} />
           </div>
         </div>
       </div>

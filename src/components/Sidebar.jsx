@@ -9,7 +9,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, activeTab, setActiveTab }) => {
 
   const menuItems = [
     { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    // { id: 'messages', icon: MessageSquare, label:'Individual Contacts' },
+   
     {id:"messages", icon:MessageSquare, label:"Individual Contacts"},
     { id: 'batch', icon: File, label: 'SMS Files' },
     { id: 'groups', icon: UsersRound, label: 'Groups' },
