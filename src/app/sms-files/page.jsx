@@ -22,14 +22,12 @@ function SMSFilesPage() {
   const [newFile, setNewFile] = useState({ author: "", fileName: "", fileType: "", size: "" });
   const fileInputRef = useRef(null);
 
-  // Open edit modal
   const openEditModal = (file) => {
     setSelectedFile(file);
     setNewFile({ ...file });
     setEditModalOpen(true);
   };
 
-  // Save edited file
   const handleSaveEdit = () => {
     setFiles((prev) =>
       prev.map((f) => (f.sn === selectedFile.sn ? { ...newFile, sn: selectedFile.sn, createdAt: f.createdAt } : f))
@@ -38,7 +36,6 @@ function SMSFilesPage() {
     setSelectedFile(null);
   };
 
-  // Upload new file
   const handleUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -57,8 +54,8 @@ function SMSFilesPage() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
+      {/* Sidebar */}
       <Sidebar
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
@@ -66,13 +63,20 @@ function SMSFilesPage() {
         setActiveTab={setActiveTab}
       />
 
-      <div className="flex-1 flex flex-col overflow-hidden p-6">
-        <Header />
+     
+      <div className="flex-1 flex flex-col overflow-hidden">
+       
+        <div className="sticky top-0 z-30 bg-gray-50 shadow">
+          <Header title="SMS Files" />
+        </div>
 
-        <main className="flex-1 overflow-auto p-6">
-
-          <div className="flex justify-between items-center mb-6">
-            <div className="relative w-72">
+        {/* <div className="bg-gray-100 p-4 ">
+      <h2 className="text-xl font-semibold text-gray-800 text-center">SMS Files</h2>
+    </div> */}
+        <main className="flex-1 overflow-auto p-4 md:p-6">
+         
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            <div className="relative w-full sm:w-72">
               <input
                 type="text"
                 placeholder="Search"
@@ -83,22 +87,23 @@ function SMSFilesPage() {
               <Search className="w-5 h-5 absolute left-3 top-2.5 text-gray-500" />
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex flex-wrap sm:flex-nowrap gap-3 w-full sm:w-auto">
               <button
                 onClick={() => setUploadModalOpen(true)}
-                className="px-5 py-2 bg-teal-500 text-white font-semibold hover:bg-teal-600 cursor-pointer rounded-lg shadow flex items-center gap-2"
+                className="px-5 py-2 bg-teal-500 text-white font-semibold hover:bg-teal-600 cursor-pointer rounded-lg shadow flex items-center gap-2 justify-center w-full sm:w-auto"
               >
                 <Plus size={16} /> ADD FILES
               </button>
 
-              <button className="rounded-lg px-3 py-2 border shadow-sm hover:bg-gray-100">
+              <button className="rounded-lg px-3 py-2 border shadow-sm hover:bg-gray-100 flex items-center justify-center">
                 <Filter className="w-4 h-4 text-gray-700" />
               </button>
             </div>
           </div>
 
+          {/* Table */}
           <div className="rounded-2xl bg-white shadow-xl p-4 overflow-x-auto">
-            <table className="w-full text-sm rounded-xl overflow-hidden text-center">
+            <table className="w-full text-sm rounded-xl overflow-hidden text-center min-w-[600px] md:min-w-full">
               <thead>
                 <tr className="bg-teal-700 text-white">
                   <th className="p-3">S.N</th>
@@ -113,19 +118,16 @@ function SMSFilesPage() {
 
               <tbody>
                 {files
-                  .filter((row) =>
-                    row.fileName.toLowerCase().includes(search.toLowerCase())
-                  )
+                  .filter((row) => row.fileName.toLowerCase().includes(search.toLowerCase()))
                   .map((row, index) => (
-                    <tr key={row.sn} className={`${index % 2 === 0 ? "bg-white" : "bg-gray-100"}`}>
+                    <tr key={row.sn} className={`${index % 2 === 0 ? "bg-white" : "bg-gray-100"} hover:bg-gray-200 transition`}>
                       <td className="p-3">{row.sn}</td>
                       <td className="p-3">{row.author}</td>
                       <td className="p-3">{row.fileName}</td>
                       <td className="p-3">{row.fileType}</td>
                       <td className="p-3">{row.size}</td>
                       <td className="p-3">{row.createdAt}</td>
-
-                      <td className="p-3 flex gap-3 justify-center">
+                      <td className="p-3 flex gap-3 justify-center flex-wrap">
                         <button className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-full shadow">
                           <Download className="w-4 h-4" />
                         </button>
@@ -149,7 +151,7 @@ function SMSFilesPage() {
 
           {/* Upload Modal */}
           {uploadModalOpen && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
               <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
                 <button
                   onClick={() => setUploadModalOpen(false)}
@@ -181,7 +183,7 @@ function SMSFilesPage() {
 
           {/* Edit Modal */}
           {editModalOpen && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
               <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
                 <button
                   onClick={() => setEditModalOpen(false)}

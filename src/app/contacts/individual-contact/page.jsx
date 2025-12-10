@@ -18,7 +18,7 @@ const ContactsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingContact, setEditingContact] = useState(null);
-  const [viewContact, setViewContact] = useState(null); // For view modal
+  const [viewContact, setViewContact] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("contacts");
 
@@ -125,7 +125,7 @@ const ContactsPage = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
       <Sidebar
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
@@ -133,25 +133,31 @@ const ContactsPage = () => {
         setActiveTab={setActiveTab}
       />
 
-      <div className="flex-1 flex flex-col overflow-hidden p-6">
-        <Header />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        
+        <div className="sticky top-0 z-30 bg-gray-50 shadow">
+          <Header title="Individual Contacts" />
+        </div>
 
-        <main className="flex-1 mt-7 overflow-auto">
+      {/* <div className="bg-gray-100 p-4 ">
+      <h2 className="text-xl font-semibold text-slate-800 text-center">Individual Contact</h2>
+    </div> */}
+        <main className="flex-1 overflow-auto p-4 md:p-6 mt-2">
           <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-            {/* Top Controls */}
-            <div className="p-6 border-b flex flex-col md:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-2 ml-auto">
+         
+            <div className="p-4 md:p-6 border-b flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div className="flex flex-wrap gap-2 items-center ml-auto w-full md:w-auto">
                 <input
                   type="text"
                   placeholder="Search..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-48 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500"
+                  className="w-full md:w-48 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500"
                 />
 
                 <button
                   onClick={openAddModal}
-                  className="flex items-center gap-2 px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 shadow"
+                  className="flex items-center gap-2 px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 shadow cursor-pointer"
                 >
                   <Plus size={16} /> Add Contact
                 </button>
@@ -166,16 +172,16 @@ const ContactsPage = () => {
 
                 <button
                   onClick={() => fileInputRef.current.click()}
-                  className="px-3 py-2 border rounded hover:bg-gray-100 shadow flex items-center gap-2"
+                  className="px-3 py-2 border rounded hover:bg-gray-100 shadow flex items-center gap-2 cursor-pointer"
                 >
                   <Upload size={16} />
                 </button>
               </div>
             </div>
 
-            {/* Table */}
+        
             <div className="overflow-x-auto">
-              <table className="w-full text-sm text-center">
+              <table className="w-full text-sm text-center min-w-[600px] md:min-w-full">
                 <thead className="bg-teal-700 text-white">
                   <tr>
                     <th className="p-3">S.N</th>
@@ -201,31 +207,31 @@ const ContactsPage = () => {
                         <td className="p-3">{contact.mobile}</td>
                         <td className="p-3 text-gray-600">{contact.groups.join(", ")}</td>
 
-                        <td className="p-3 flex justify-center gap-2">
+                        <td className="p-3 flex justify-center gap-2 flex-wrap">
                           <button
                             onClick={() => openViewModal(contact)}
-                            className="px-2 py-1 bg-green-500 text-white rounded-full hover:bg-green-600 shadow flex items-center gap-1"
+                            className="px-2 py-1 bg-green-500 text-white rounded-full hover:bg-green-600 shadow flex items-center gap-1 cursor-pointer"
                           >
                             <Eye size={16} />
                           </button>
 
                           <button
                             onClick={() => openEditModal(contact)}
-                            className="px-2 py-1 bg-blue-500 text-white rounded-full hover:bg-blue-600 shadow flex items-center gap-1"
+                            className="px-2 py-1 bg-blue-500 text-white rounded-full hover:bg-blue-600 shadow flex items-center gap-1 cursor-pointer"
                           >
                             <Edit size={16} />
                           </button>
 
                           <button
                             onClick={() => handleDeleteContact(contact.id)}
-                            className="px-2 py-1 bg-red-500 text-white rounded-full hover:bg-red-600 shadow flex items-center gap-1"
+                            className="px-2 py-1 bg-red-500 text-white rounded-full hover:bg-red-600 shadow flex items-center gap-1 cursor-pointer"
                           >
                             <Trash size={16} />
                           </button>
 
                           <button
                             onClick={() => handleSendSMS(contact)}
-                            className="px-2 py-1 bg-teal-500 text-white rounded-full hover:bg-teal-600 shadow flex items-center gap-1"
+                            className="px-2 py-1 bg-teal-500 text-white rounded-full hover:bg-teal-600 shadow flex items-center gap-1 cursor-pointer"
                           >
                             <Send size={16} />
                           </button>
@@ -240,11 +246,11 @@ const ContactsPage = () => {
 
           {/* Add/Edit Modal */}
           {modalOpen && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
               <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
                 <button
                   onClick={() => setModalOpen(false)}
-                  className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+                  className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 cursor-pointer" 
                 >
                   <X size={20} />
                 </button>
@@ -280,7 +286,7 @@ const ContactsPage = () => {
 
                   <button
                     onClick={handleSaveContact}
-                    className="w-full py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600"
+                    className="w-full py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 cursor-pointer"
                   >
                     {editingContact !== null ? "Save Changes" : "Save Contact"}
                   </button>
@@ -291,7 +297,7 @@ const ContactsPage = () => {
 
           {/* View Modal */}
           {viewContact && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
               <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
                 <button
                   onClick={() => setViewContact(null)}

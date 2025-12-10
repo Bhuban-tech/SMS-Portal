@@ -17,7 +17,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, activeTab, setActiveTab }) => {
     { id: "dashboard", icon: LayoutDashboard, label: "Dashboard", path: "/" },
     { id: "messages", icon: MessageSquare, label: "Individual Contact", path: "/contacts/individual-contact" },
     { id: "batch", icon: File, label: "SMS Files", path: "/sms-files" },
-    { id: "groups", icon: Users, label: "Groups", path: "/contacts/group" },
+    { id: "groups", icon: Users, label: "Group Contacts", path: "/contacts/group" },
     { id: "delivery-reports", icon: FileText, label: "Delivery Reports", path: "/delivery-reports" },
     { id: "balance-report", icon: Pen, label: "Balance Report", path: "/balance-report" },
   ];
