@@ -20,11 +20,12 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, activeTab, setActiveTab }) => {
     { id: "groups", icon: Users, label: "Group Contacts", path: "/contacts/group" },
     { id: "delivery-reports", icon: FileText, label: "Delivery Reports", path: "/delivery-reports" },
     { id: "balance-report", icon: Pen, label: "Balance Report", path: "/balance-report" },
+    {id: "send-sms", icon: MessageSquare, label: "Send SMS", path: "/send-sms" },
   ];
 
   return (
     <>
-      {/* Overlay for mobile */}
+     
       <div
         className={`fixed inset-0 bg-black/50 z-30 backdrop-blur-sm transition-opacity duration-300 lg:hidden ${
           sidebarOpen ? "opacity-100 visible" : "opacity-0 invisible"
@@ -32,7 +33,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, activeTab, setActiveTab }) => {
         onClick={() => setSidebarOpen(false)}
       />
 
-      {/* Sidebar */}
+      
       <aside
         className={`
           fixed lg:relative top-0 left-0 h-full w-64 z-40 bg-linear-to-b from-slate-900 via-slate-800 to-slate-900

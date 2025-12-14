@@ -7,8 +7,10 @@ import { Eye, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { API_BASE_URL } from "@/config/api";
 
+
+
 const fetchWithAuth = async (url, options = {}) => {
-  const token = localStorage.getItem("access_token");
+  const token = localStorage.getItem("token");
   if (!token) {
     toast.error("Please login again");
     return null;
@@ -21,12 +23,16 @@ const fetchWithAuth = async (url, options = {}) => {
   };
 
   const response = await fetch(url, { ...options, headers });
+
   if (!response.ok) {
     const errorText = await response.text();
     throw new Error(`API error: ${response.status} - ${errorText}`);
   }
+
   return response.json();
 };
+
+
 
 export default function DeliveryReports() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -41,11 +47,14 @@ export default function DeliveryReports() {
 
   const itemsPerPage = 10;
 
+ 
   const fetchDeliveryReports = async () => {
     setLoading(true);
     try {
-      const url = `${API_BASE_URL}/api/delivery_reports`;
-      const response = await fetchWithAuth(url);
+      const url = `${API_BASE_URL}/api/delivery-reports`;
+
+     
+      const response = await fetchWithAuth(url, { method: "GET" });
 
       const reports = response?.data || response || [];
 
@@ -58,7 +67,7 @@ export default function DeliveryReports() {
       }
     } catch (error) {
       console.error("Failed to load delivery reports:", error);
-      
+
       if (error.message.includes("404")) {
         toast.error("Delivery reports endpoint not found. Contact admin.");
       } else if (error.message.includes("403")) {
@@ -217,7 +226,6 @@ export default function DeliveryReports() {
         </main>
       </div>
 
-      {/* View Modal */}
       {viewSMS && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl relative">
@@ -227,7 +235,9 @@ export default function DeliveryReports() {
             >
               <X size={24} />
             </button>
+
             <h2 className="text-2xl font-bold mb-4">SMS Delivery Report</h2>
+
             <div className="space-y-3 text-left">
               <p><strong>User:</strong> {viewSMS.user?.name || viewSMS.user}</p>
               <p><strong>Sent From:</strong> {viewSMS.sent_from}</p>
