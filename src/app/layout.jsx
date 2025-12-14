@@ -1,6 +1,7 @@
 import Header from "@/components/Header";
 import "./globals.css";
 import Sidebar from "@/components/Sidebar";
+import { Toaster } from "sonner";
 
 export const metadata = {
   title: "SMS Dashboard",
@@ -11,7 +12,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>  
-                 <main>{children}</main>
+
+    <Toaster position="top-right" richColors closeButton />
+        <main>{children}</main>
       </body>
     </html>
   );

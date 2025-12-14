@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { API_BASE_URL, ENDPOINTS } from "@/config/api";
 
+
 export default function LoginPage() {
   const router = useRouter();
   const [username, setUsername] = useState("");
@@ -37,6 +38,11 @@ export default function LoginPage() {
       }
 
       localStorage.setItem("token", data.data.token);
+      localStorage.setItem("adminId", data.data.id.toString());
+      localStorage.setItem("username", data.data.username);
+      localStorage.setItem("email", data.data.email || "");
+      
+  
       router.push("/dashboard");
       setLoading(false);
     } catch (err) {
@@ -47,7 +53,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-teal-50 p-4">
-      <div className="bg-white rounded-3xl shadow-5xl w-full max-w-md p-10 border border-teal-100 hover:scale-105 transition-transform duration-500">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-10 border border-teal-100 hover:scale-105 transition-transform duration-500">
         <h1 className="text-3xl font-bold mb-8 text-center">
           <span className="text-teal-600">SMS Portal</span>{" "}
           <span className="text-gray-700">Login</span>

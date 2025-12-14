@@ -1,57 +1,84 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Plus, Upload, X, Trash, Edit, Send, Eye } from "lucide-react";
 import Papa from "papaparse";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
-
-const contactsDataInitial = [
-  { id: 1, name: "Bhuban", mobile: "9851579340", groups: ["BIT", "CSIT", "BCA"] },
-  { id: 2, name: "Himal", mobile: "9851965462", groups: ["BIT", "CSIT"] },
-  { id: 3, name: "Pemba Mainali", mobile: "9813629763", groups: ["BCA"] },
-  { id: 4, name: "Himal Dhakal", mobile: "9761758529", groups: ["CSIT"] },
-];
+import { API_BASE_URL, ENDPOINTS } from "@/config/api";
+import { toast } from "sonner";
 
 const ContactsPage = () => {
-  const [contactsData, setContactsData] = useState(contactsDataInitial);
+  const [contactsData, setContactsData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingContact, setEditingContact] = useState(null);
-  const [viewContact, setViewContact] = useState(null); // For view modal
+  const [viewContact, setViewContact] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("contacts");
+  const [loading, setLoading] = useState(false);
 
-  const [newContact, setNewContact] = useState({
-    name: "",
-    mobile: "",
-    groups: "",
-  });
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [selectedContact, setSelectedContact] = useState(null);
 
+  const [newContact, setNewContact] = useState({ name: "", mobile: "" });
   const fileInputRef = useRef(null);
+
+ 
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem("token");
+    return {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    };
+  };
+
+
+  const loadContacts = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(API_BASE_URL + ENDPOINTS.GET_ALL_CONTACTS, {
+        headers: getAuthHeaders(),
+      });
+      const result = await res.json();
+
+      if (result.success) {
+        const formatted = result.data.map((c) => ({
+          id: c.id,
+          name: c.name,
+          mobile: c.phoneNo,
+        }));
+        setContactsData(formatted);
+      } else {
+        toast.error(result.message || "Failed to fetch contacts");
+      }
+    } catch (err) {
+      console.error("Error fetching contacts:", err);
+      toast.error("Error fetching contacts");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadContacts();
+  }, []);
 
   const filteredContacts = contactsData.filter((c) => {
     const term = searchTerm.toLowerCase();
-    return (
-      c.name.toLowerCase().includes(term) ||
-      c.mobile.includes(term) ||
-      c.groups.some((g) => g.toLowerCase().includes(term))
-    );
+    return c.name.toLowerCase().includes(term) || c.mobile.includes(term);
   });
 
+  // Modal handlers
   const openAddModal = () => {
     setEditingContact(null);
+    setNewContact({ name: "", mobile: "" });
     setModalOpen(true);
-    setNewContact({ name: "", mobile: "", groups: "" });
   };
 
   const openEditModal = (contact) => {
     setEditingContact(contact.id);
-    setNewContact({
-      name: contact.name,
-      mobile: contact.mobile,
-      groups: contact.groups.join(", "),
-    });
+    setNewContact({ name: contact.name, mobile: contact.mobile });
     setModalOpen(true);
   };
 
@@ -59,46 +86,87 @@ const ContactsPage = () => {
     setViewContact(contact);
   };
 
-  const handleSaveContact = () => {
+ 
+  const handleSaveContact = async () => {
     if (!newContact.name || !newContact.mobile) {
-      alert("Please enter Name & Mobile Number");
+      toast.error("Please enter Name & Mobile Number.");
       return;
     }
 
-    const groupsArray = newContact.groups
-      .split(",")
-      .map((g) => g.trim())
-      .filter(Boolean);
-
-    if (editingContact !== null) {
-      setContactsData((prev) =>
-        prev.map((c) =>
-          c.id === editingContact
-            ? { ...c, name: newContact.name, mobile: newContact.mobile, groups: groupsArray }
-            : c
-        )
-      );
-    } else {
-      const newId = contactsData.length
-        ? contactsData[contactsData.length - 1].id + 1
-        : 1;
-      setContactsData([...contactsData, { id: newId, name: newContact.name, mobile: newContact.mobile, groups: groupsArray }]);
+    const phoneRegex = /^[0-9]{10}$/;
+    if (!phoneRegex.test(newContact.mobile)) {
+      toast.error("Please enter a valid 10-digit Mobile Number.");
+      return;
     }
 
-    setModalOpen(false);
-    setEditingContact(null);
-  };
+    const payload = { name: newContact.name, phoneNo: newContact.mobile };
 
-  const handleDeleteContact = (id) => {
-    if (confirm("Delete this contact?")) {
-      setContactsData((prev) => prev.filter((c) => c.id !== id));
+    try {
+      let res;
+      if (editingContact !== null) {
+        res = await fetch(API_BASE_URL + ENDPOINTS.UPDATE_CONTACT(editingContact), {
+          method: "PUT",
+          headers: getAuthHeaders(),
+          body: JSON.stringify(payload),
+        });
+      } else {
+        res = await fetch(API_BASE_URL + ENDPOINTS.CREATE_CONTACT, {
+          method: "POST",
+          headers: getAuthHeaders(),
+          body: JSON.stringify(payload),
+        });
+      }
+
+      const result = await res.json();
+
+      if (!result.success) {
+        toast.error(result.message || "Operation failed");
+        return;
+      }
+
+      toast.success(editingContact !== null ? "Contact updated!" : "Contact added!");
+
+      // Refetch all contacts after add/update
+      await loadContacts();
+
+      setModalOpen(false);
+      setEditingContact(null);
+    } catch (err) {
+      console.error("Error saving contact:", err);
+      toast.error("Error saving contact");
     }
   };
 
+  // Delete contact
+  const handleDeleteContact = async (id) => {
+    setShowDeleteConfirm(false);
+
+    try {
+      const res = await fetch(API_BASE_URL + ENDPOINTS.DELETE_CONTACT(id), {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      });
+      const result = await res.json();
+
+      if (!result.success) {
+        toast.error(result.message || "Delete failed");
+        return;
+      }
+
+      toast.success("Contact deleted successfully!");
+      await loadContacts(); // Refetch all contacts after deletion
+    } catch (err) {
+      console.error("Error deleting contact:", err);
+      toast.error("Error deleting contact");
+    }
+  };
+
+  // Send SMS simulation
   const handleSendSMS = (contact) => {
-    alert(`Sending SMS to ${contact.name} (${contact.mobile})`);
+    toast.success(`SMS sent to ${contact.name} (${contact.mobile})`);
   };
 
+  // CSV Upload
   const handleCSVUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -106,20 +174,32 @@ const ContactsPage = () => {
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
-      complete: (results) => {
-        const newContacts = results.data.map((row, index) => ({
-          id: contactsData.length + index + 1,
-          name: row.name,
-          mobile: row.mobile,
-          groups: row.groups ? row.groups.split(",").map((g) => g.trim()) : [],
-        }));
+      complete: async (results) => {
+        try {
+          const newContacts = results.data.map((row) => ({
+            name: row.name,
+            phoneNo: row.mobile,
+          }));
 
-        setContactsData((prev) => [...prev, ...newContacts]);
-        alert(`${newContacts.length} contacts uploaded successfully!`);
+          // Send CSV data to backend (optional, if API supports bulk create)
+          for (let contact of newContacts) {
+            await fetch(API_BASE_URL + ENDPOINTS.CREATE_CONTACT, {
+              method: "POST",
+              headers: getAuthHeaders(),
+              body: JSON.stringify(contact),
+            });
+          }
+
+          toast.success(`${newContacts.length} contacts uploaded successfully!`);
+          await loadContacts(); // Refetch all contacts
+        } catch (err) {
+          console.error("Error uploading CSV contacts:", err);
+          toast.error("Error uploading CSV");
+        }
       },
       error: (err) => {
-        console.error(err);
-        alert("Error parsing CSV file.");
+        console.error("CSV parse error:", err);
+        toast.error("Error parsing CSV");
       },
     });
   };
@@ -138,7 +218,6 @@ const ContactsPage = () => {
 
         <main className="flex-1 mt-7 overflow-auto">
           <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-            {/* Top Controls */}
             <div className="p-6 border-b flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-2 ml-auto">
                 <input
@@ -173,7 +252,6 @@ const ContactsPage = () => {
               </div>
             </div>
 
-            {/* Table */}
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-center">
                 <thead className="bg-teal-700 text-white">
@@ -181,15 +259,20 @@ const ContactsPage = () => {
                     <th className="p-3">S.N</th>
                     <th className="p-3">Name</th>
                     <th className="p-3">Mobile Number</th>
-                    <th className="p-3">Groups</th>
                     <th className="p-3">Actions</th>
                   </tr>
                 </thead>
 
                 <tbody>
-                  {filteredContacts.length === 0 ? (
+                  {loading ? (
                     <tr>
-                      <td colSpan={5} className="p-12 text-gray-500 text-center">
+                      <td colSpan={4} className="p-12 text-gray-500 text-center">
+                        Loading contacts...
+                      </td>
+                    </tr>
+                  ) : filteredContacts.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="p-12 text-gray-500 text-center">
                         No contacts found.
                       </td>
                     </tr>
@@ -199,7 +282,6 @@ const ContactsPage = () => {
                         <td className="p-3">{idx + 1}</td>
                         <td className="p-3 font-medium">{contact.name}</td>
                         <td className="p-3">{contact.mobile}</td>
-                        <td className="p-3 text-gray-600">{contact.groups.join(", ")}</td>
 
                         <td className="p-3 flex justify-center gap-2">
                           <button
@@ -217,11 +299,14 @@ const ContactsPage = () => {
                           </button>
 
                           <button
-                            onClick={() => handleDeleteContact(contact.id)}
+                            onClick={() => {
+                              setSelectedContact(contact);
+                              setShowDeleteConfirm(true);
+                            }}
                             className="px-2 py-1 bg-red-500 text-white rounded-full hover:bg-red-600 shadow flex items-center gap-1"
                           >
                             <Trash size={16} />
-                          </button>
+                          </button> 
 
                           <button
                             onClick={() => handleSendSMS(contact)}
@@ -240,80 +325,86 @@ const ContactsPage = () => {
 
           {/* Add/Edit Modal */}
           {modalOpen && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-              <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
-                <button
-                  onClick={() => setModalOpen(false)}
-                  className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-                >
-                  <X size={20} />
-                </button>
+            <Modal
+              title={editingContact !== null ? "Edit Contact" : "Add New Contact"}
+              close={() => setModalOpen(false)}
+            >
+              <input
+                type="text"
+                placeholder="Name"
+                value={newContact.name}
+                onChange={(e) => setNewContact({ ...newContact, name: e.target.value })}
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500"
+              />
 
-                <h2 className="text-xl font-bold mb-4">
-                  {editingContact !== null ? "Edit Contact" : "Add New Contact"}
-                </h2>
+              <input
+                type="text"
+                placeholder="Mobile Number"
+                value={newContact.mobile}
+                onChange={(e) => setNewContact({ ...newContact, mobile: e.target.value })}
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500"
+              />
 
-                <div className="space-y-4">
-                  <input
-                    type="text"
-                    placeholder="Name"
-                    value={newContact.name}
-                    onChange={(e) => setNewContact({ ...newContact, name: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500"
-                  />
-
-                  <input
-                    type="text"
-                    placeholder="Mobile Number"
-                    value={newContact.mobile}
-                    onChange={(e) => setNewContact({ ...newContact, mobile: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500"
-                  />
-
-                  <input
-                    type="text"
-                    placeholder="Groups (comma separated)"
-                    value={newContact.groups}
-                    onChange={(e) => setNewContact({ ...newContact, groups: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500"
-                  />
-
-                  <button
-                    onClick={handleSaveContact}
-                    className="w-full py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600"
-                  >
-                    {editingContact !== null ? "Save Changes" : "Save Contact"}
-                  </button>
-                </div>
-              </div>
-            </div>
+              <button
+                onClick={handleSaveContact}
+                className="w-full py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 mt-4"
+              >
+                {editingContact !== null ? "Save Changes" : "Save Contact"}
+              </button>
+            </Modal>
           )}
 
           {/* View Modal */}
           {viewContact && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-              <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
+            <Modal title="Contact Details" close={() => setViewContact(null)}>
+              <p><strong>Name:</strong> {viewContact.name}</p>
+              <p><strong>Mobile:</strong> {viewContact.mobile}</p>
+            </Modal>
+          )}
+
+          {/* Delete Confirm */}
+          {showDeleteConfirm && selectedContact && (
+            <Modal title="Confirm Delete" close={() => setShowDeleteConfirm(false)}>
+              <p className="text-center">
+                Are you sure you want to delete <strong>{selectedContact.name}</strong>?
+              </p>
+              <div className="flex justify-center gap-4 mt-4">
                 <button
-                  onClick={() => setViewContact(null)}
-                  className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400"
                 >
-                  <X size={20} />
+                  Cancel
                 </button>
-
-                <h2 className="text-xl font-bold mb-4">Contact Details</h2>
-
-                <div className="space-y-2 text-left">
-                  <p><strong>Name:</strong> {viewContact.name}</p>
-                  <p><strong>Mobile:</strong> {viewContact.mobile}</p>
-                  <p><strong>Groups:</strong> {viewContact.groups.join(", ")}</p>
-                </div>
+                <button
+                  onClick={() => handleDeleteContact(selectedContact.id)}
+                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                >
+                  Delete
+                </button>
               </div>
-            </div>
+            </Modal>
           )}
         </main>
       </div>
     </div>
   );
 };
+
+function Modal({ title, close, children }) {
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-xl relative">
+        <button
+          onClick={close}
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-800"
+        >
+          <X size={20} />
+        </button>
+        <h2 className="text-xl font-bold mb-4 text-center">{title}</h2>
+        <div className="space-y-4">{children}</div>
+      </div>
+    </div>
+  );
+}
 
 export default ContactsPage;

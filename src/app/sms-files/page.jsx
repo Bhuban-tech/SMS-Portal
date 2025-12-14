@@ -22,14 +22,14 @@ function SMSFilesPage() {
   const [newFile, setNewFile] = useState({ author: "", fileName: "", fileType: "", size: "" });
   const fileInputRef = useRef(null);
 
-  // Open edit modal
+ 
   const openEditModal = (file) => {
     setSelectedFile(file);
     setNewFile({ ...file });
     setEditModalOpen(true);
   };
 
-  // Save edited file
+
   const handleSaveEdit = () => {
     setFiles((prev) =>
       prev.map((f) => (f.sn === selectedFile.sn ? { ...newFile, sn: selectedFile.sn, createdAt: f.createdAt } : f))
@@ -38,7 +38,6 @@ function SMSFilesPage() {
     setSelectedFile(null);
   };
 
-  // Upload new file
   const handleUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -147,7 +146,7 @@ function SMSFilesPage() {
             </table>
           </div>
 
-          {/* Upload Modal */}
+        
           {uploadModalOpen && (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
               <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
@@ -179,7 +178,7 @@ function SMSFilesPage() {
             </div>
           )}
 
-          {/* Edit Modal */}
+          
           {editModalOpen && (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
               <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
