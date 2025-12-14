@@ -69,7 +69,7 @@ const ContactsPage = () => {
     return c.name.toLowerCase().includes(term) || c.mobile.includes(term);
   });
 
-  // Modal handlers
+ 
   const openAddModal = () => {
     setEditingContact(null);
     setNewContact({ name: "", mobile: "" });

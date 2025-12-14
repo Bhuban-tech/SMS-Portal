@@ -36,6 +36,7 @@ export default function LoginPage() {
         setLoading(false);
         return;
       }
+      document.cookie = `token=${data.data.token}; path=/`;
 
       localStorage.setItem("token", data.data.token);
       localStorage.setItem("adminId", data.data.id.toString());

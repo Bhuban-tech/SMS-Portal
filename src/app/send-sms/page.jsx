@@ -15,14 +15,21 @@ export default function SMSSendUI() {
   const [sending, setSending] = useState(false);
   const [groups, setGroups] = useState([]);
   const [token, setToken] = useState("");
+  const [adminId, setAdminId] = useState(0);
 
-  // Load token from localStorage
+
+  useEffect(() => {
+  const savedAdminId = localStorage.getItem("adminId");
+  if (savedAdminId) setAdminId(Number(savedAdminId)); 
+}, []);
+
   useEffect(() => {
     const savedToken = localStorage.getItem("token");
     if (savedToken) setToken(savedToken);
   }, []);
 
-  // Fetch groups from backend
+
+
   useEffect(() => {
     if (!token) return;
 
@@ -42,16 +49,16 @@ export default function SMSSendUI() {
     fetchGroups();
   }, [token]);
 
-  // Show alerts
+
   const showAlert = (type, message) => {
     setAlert({ type, message });
     setTimeout(() => setAlert(null), 5000);
   };
 
-  // Validate phone number (Nepal format 980xxxxxxx)
-  const validatePhone = (phone) => /^[0-9]{10,12}$/.test(phone);
+ const validatePhone = (phone) => /^\+977\d{10}$/.test(phone);
 
-  // Add individual phone number
+
+ 
   const addPhoneNumber = () => {
     const trimmed = currentPhone.trim();
     if (!trimmed) return showAlert("error", "Please enter a phone number");
@@ -63,15 +70,14 @@ export default function SMSSendUI() {
     showAlert("success", "Phone number added successfully");
   };
 
-  // Remove phone number
   const removePhoneNumber = (phone) => setPhoneNumbers(phoneNumbers.filter((p) => p !== phone));
 
-  // Handle bulk file change
+ 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Only allow CSV files
+  
     if (!file.name.endsWith(".csv")) {
       showAlert("error", "Please upload a CSV file");
       e.target.value = null;
@@ -82,7 +88,6 @@ export default function SMSSendUI() {
     setSelectedFile(file.name);
   };
 
-  // Handle sending SMS
   const handleSendSMS = async () => {
     if (!formData.message.trim()) return showAlert("error", "Please enter a message");
 
@@ -98,23 +103,34 @@ export default function SMSSendUI() {
 
     try {
       let response;
+if (formData.sendType === "individual") {
+  console.log("Sending individual SMS:", phoneNumbers, formData.message);
 
-      if (formData.sendType === "individual") {
-        // Send to individual phone numbers
-        response = await fetch(`${API_BASE_URL}/api/messages/send`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ phoneNumbers, message: formData.message }),
-        });
-      } else if (formData.sendType === "group") {
-        // Send to group
+  const body = {
+    senderId: adminId,
+    content: formData.message,
+    // recipientContactIds: [], 
+    // recipientGroupIds: [],   
+    recipientNumbers: phoneNumbers,
+  };
+
+  response = await fetch(`${API_BASE_URL}/api/messages/send`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify(body),
+  });
+}
+
+
+ else if (formData.sendType === "group") {
+    
         response = await fetch(`${API_BASE_URL}/sms/send/group`, {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
           body: JSON.stringify({ groupId: selectedGroup, message: formData.message }),
         });
       } else if (formData.sendType === "bulk") {
-        // Send bulk file
+      
         const form = new FormData();
         form.append("file", bulkFile);
         form.append("message", formData.message);
@@ -131,7 +147,7 @@ export default function SMSSendUI() {
 
       showAlert("success", "SMS sent successfully!");
 
-      // Reset only relevant fields
+     
       if (formData.sendType === "individual") setPhoneNumbers([]);
       if (formData.sendType === "bulk") setBulkFile(null);
       setFormData({ ...formData, message: "" });
@@ -149,7 +165,7 @@ export default function SMSSendUI() {
   return (
     <div className="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100 p-6">
       <div className="max-w-4xl mx-auto">
-        {/* Alerts */}
+   
         {alert && (
           <div
             className={`mb-6 p-4 rounded-lg shadow-lg flex items-center gap-3 ${
@@ -179,7 +195,7 @@ export default function SMSSendUI() {
           </div>
 
           <div className="p-8">
-            {/* Send Type */}
+          
             <div className="mb-6">
               <label className="block text-sm font-semibold text-gray-700 mb-3">Send Type</label>
               <div className="grid grid-cols-3 gap-4">
@@ -205,7 +221,7 @@ export default function SMSSendUI() {
               </div>
             </div>
 
-            {/* Individual */}
+         
             {formData.sendType === "individual" && (
               <div className="mb-6">
                 <input
@@ -232,7 +248,7 @@ export default function SMSSendUI() {
               </div>
             )}
 
-            {/* Group */}
+            
             {(formData.sendType === "group" || formData.sendType === "bulk") && (
               <div className="mb-6 relative">
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Select Group</label>
@@ -251,7 +267,7 @@ export default function SMSSendUI() {
               </div>
             )}
 
-            {/* Bulk */}
+          
             {formData.sendType === "bulk" && (
               <div className="mb-6">
                 <input type="file" accept=".csv" onChange={handleFileChange} />
@@ -259,7 +275,7 @@ export default function SMSSendUI() {
               </div>
             )}
 
-            {/* Message */}
+        
             <div className="mb-6">
               <textarea
                 rows="5"

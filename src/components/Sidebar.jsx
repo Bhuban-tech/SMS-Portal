@@ -14,7 +14,7 @@ import Link from "next/link";
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen, activeTab, setActiveTab }) => {
   const menuItems = [
-    { id: "dashboard", icon: LayoutDashboard, label: "Dashboard", path: "/" },
+    { id: "dashboard", icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
     { id: "messages", icon: MessageSquare, label: "Individual Contact", path: "/contacts/individual-contact" },
     { id: "batch", icon: File, label: "SMS Files", path: "/sms-files" },
     { id: "groups", icon: Users, label: "Groups", path: "/contacts/groups" },

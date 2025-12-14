@@ -22,7 +22,7 @@ export default function GroupPage() {
   const [showAddContactModal, setShowAddContactModal] = useState(false);
   const [allContacts, setAllContacts] = useState([]);
   const [addingContact, setAddingContact] = useState(false);
-  const [selectedContactIds, setSelectedContactIds] = useState([]); // ✅ multiple
+  const [selectedContactIds, setSelectedContactIds] = useState([]); 
   const [selectedGroup, setSelectedGroup] = useState(null);
 
   const [showViewContactsModal, setShowViewContactsModal] = useState(false);
