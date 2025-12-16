@@ -8,6 +8,7 @@ import Header from "@/components/Header";
 import { API_BASE_URL, ENDPOINTS } from "@/config/api";
 import { toast } from "sonner";
 
+
 const ContactsPage = () => {
   const [contactsData, setContactsData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -17,6 +18,7 @@ const ContactsPage = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("contacts");
   const [loading, setLoading] = useState(false);
+  const [mobileError, setMobileError] = useState("");
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [selectedContact, setSelectedContact] = useState(null);
@@ -191,7 +193,7 @@ const ContactsPage = () => {
           }
 
           toast.success(`${newContacts.length} contacts uploaded successfully!`);
-          await loadContacts(); // Refetch all contacts
+          await loadContacts();
         } catch (err) {
           console.error("Error uploading CSV contacts:", err);
           toast.error("Error uploading CSV");
@@ -208,8 +210,7 @@ const ContactsPage = () => {
     <div className="flex h-screen bg-gray-50">
       <Sidebar
         sidebarOpen={sidebarOpen}
-        setSidebarOpen={setSidebarOpen}
-        activeTab={activeTab}
+        setSidebarOpen={setSidebarOpen}                                                                                                                                                                 activeTab={activeTab}
         setActiveTab={setActiveTab}
       />
 
@@ -323,36 +324,55 @@ const ContactsPage = () => {
             </div>
           </div>
 
-          {/* Add/Edit Modal */}
-          {modalOpen && (
-            <Modal
-              title={editingContact !== null ? "Edit Contact" : "Add New Contact"}
-              close={() => setModalOpen(false)}
-            >
-              <input
-                type="text"
-                placeholder="Name"
-                value={newContact.name}
-                onChange={(e) => setNewContact({ ...newContact, name: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500"
-              />
+       {/* Add/Edit Modal */}
+{modalOpen && (
+  <Modal
+    title={editingContact !== null ? "Edit Contact" : "Add New Contact"}
+    close={() => setModalOpen(false)}
+  >
+    <input
+      type="text"
+      placeholder="Name"
+      value={newContact.name}
+      onChange={(e) => setNewContact({ ...newContact, name: e.target.value })}
+      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500"
+    />
 
-              <input
-                type="text"
-                placeholder="Mobile Number"
-                value={newContact.mobile}
-                onChange={(e) => setNewContact({ ...newContact, mobile: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500"
-              />
+    <input
+      type="text"
+      placeholder="Mobile Number"
+      value={newContact.mobile}
+      onChange={(e) => {
+        const value = e.target.value.replace(/\D/g, ""); // allow only numbers
+        setNewContact({ ...newContact, mobile: value });
 
-              <button
-                onClick={handleSaveContact}
-                className="w-full py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 mt-4"
-              >
-                {editingContact !== null ? "Save Changes" : "Save Contact"}
-              </button>
-            </Modal>
-          )}
+        if (value.length < 10) {
+          setMobileError("Mobile number must be 10 digits");
+        } else if (value.length > 10) {
+          setMobileError("Mobile number cannot exceed 10 digits");
+        } else {
+          setMobileError("");
+        }
+      }}
+      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500"
+    />
+    {mobileError && <p className="text-red-500 text-sm mt-1">{mobileError}</p>}
+
+    <button
+      onClick={() => {
+        if (mobileError) {
+          toast.error("Please fix mobile number errors");
+          return;
+        }
+        handleSaveContact();
+      }}
+      className="w-full py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 mt-4"
+    >
+      {editingContact !== null ? "Save Changes" : "Save Contact"}
+    </button>
+  </Modal>
+)}
+
 
           {/* View Modal */}
           {viewContact && (

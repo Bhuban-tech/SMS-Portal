@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { Send, X, Check, AlertCircle, Users, User, Upload } from "lucide-react";
 import { API_BASE_URL, ENDPOINTS } from "@/config/api";
-import { toast } from "sonner";
+import Header from "@/components/Header";
+import Sidebar from "@/components/Sidebar";
 
 export default function SMSSendUI() {
   const [formData, setFormData] = useState({ message: "", sendType: "individual" });
@@ -12,6 +13,7 @@ export default function SMSSendUI() {
   const [currentPhone, setCurrentPhone] = useState("");
   const [bulkFile, setBulkFile] = useState(null);
   const [selectedFile, setSelectedFile] = useState("");
+  const [bulkGroupName, setBulkGroupName] = useState("");
   const [alert, setAlert] = useState(null);
   const [sending, setSending] = useState(false);
   const [groups, setGroups] = useState([]);
@@ -19,16 +21,15 @@ export default function SMSSendUI() {
   const [token, setToken] = useState("");
   const [adminId, setAdminId] = useState(0);
 
-  // Load adminId and token from localStorage
+  // Load token and adminId
   useEffect(() => {
     const savedAdminId = localStorage.getItem("adminId");
-    if (savedAdminId) setAdminId(Number(savedAdminId));
-
     const savedToken = localStorage.getItem("token");
+    if (savedAdminId) setAdminId(Number(savedAdminId));
     if (savedToken) setToken(savedToken);
   }, []);
 
-  // Fetch groups
+  // Fetch groups and contacts
   useEffect(() => {
     if (!token) return;
 
@@ -39,8 +40,7 @@ export default function SMSSendUI() {
         });
         const data = await res.json();
         if (data.success) setGroups(data.data);
-      } catch (err) {
-        console.error("Failed to load groups", err);
+      } catch {
         showAlert("error", "Failed to load groups");
       }
     };
@@ -52,8 +52,7 @@ export default function SMSSendUI() {
         });
         const data = await res.json();
         if (data.success) setContacts(data.data);
-      } catch (err) {
-        console.error("Failed to load contacts", err);
+      } catch {
         showAlert("error", "Failed to load contacts");
       }
     };
@@ -67,16 +66,14 @@ export default function SMSSendUI() {
     setTimeout(() => setAlert(null), 5000);
   };
 
-  const validatePhone = (phone) => /^\+977\d{10}$/.test(phone);
-
   const removePhoneNumber = (phone) => setPhoneNumbers(phoneNumbers.filter((p) => p !== phone));
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    if (!file.name.endsWith(".csv")) {
-      showAlert("error", "Please upload a CSV file");
+    if (!file.name.toLowerCase().endsWith(".csv")) {
+      showAlert("error", "Please upload a CSV file only");
       e.target.value = null;
       return;
     }
@@ -86,7 +83,9 @@ export default function SMSSendUI() {
   };
 
   const handleSendSMS = async () => {
-    if (!formData.message.trim()) return showAlert("error", "Please enter a message");
+    // Validation
+    if (formData.sendType !== "bulk" && !formData.message.trim())
+      return showAlert("error", "Please enter a message");
 
     if (formData.sendType === "individual" && phoneNumbers.length === 0)
       return showAlert("error", "Please add at least one phone number");
@@ -94,13 +93,18 @@ export default function SMSSendUI() {
     if (formData.sendType === "group" && !selectedGroup)
       return showAlert("error", "Please select a group");
 
-    if (formData.sendType === "bulk" && !bulkFile) return showAlert("error", "Please select a file");
+    if (formData.sendType === "bulk" && !bulkFile)
+      return showAlert("error", "Please select a CSV file");
+
+    if (formData.sendType === "bulk" && !bulkGroupName.trim())
+      return showAlert("error", "Please enter a group name");
 
     setSending(true);
 
     try {
       let response;
 
+      // Individual
       if (formData.sendType === "individual") {
         const body = {
           senderId: adminId,
@@ -113,37 +117,75 @@ export default function SMSSendUI() {
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
           body: JSON.stringify(body),
         });
-      } else if (formData.sendType === "group") {
-        response = await fetch(`${API_BASE_URL}/sms/send/group`, {
+      } 
+      // Group
+      else if (formData.sendType === "group") {
+        const body = {
+          senderId: adminId,
+          groupId: selectedGroup,
+          content: formData.message,
+        };
+
+        response = await fetch(`${API_BASE_URL}/api/messages/send`, {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ groupId: selectedGroup, message: formData.message }),
+          body: JSON.stringify(body),
         });
-      } else if (formData.sendType === "bulk") {
+      } 
+      // Bulk
+      else if (formData.sendType === "bulk") {
         const form = new FormData();
         form.append("file", bulkFile);
-        form.append("message", formData.message);
 
-        response = await fetch(`${API_BASE_URL}/api/contacts/bulk`, {
+        const groupRequest = {
+          name: bulkGroupName.trim(),
+          senderId: adminId,
+        };
+
+        form.append(
+          "groupRequest",
+          new Blob([JSON.stringify(groupRequest)], { type: "application/json" })
+        );
+
+        response = await fetch(`${API_BASE_URL}/api/groups/contacts/bulk`, {
           method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
           body: form,
         });
       }
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Failed to send SMS");
+      if (!response) throw new Error("No response from server");
 
-      showAlert("success", "SMS sent successfully!");
+      // Parse JSON safely
+      let data;
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        data = await response.json();
+      } else {
+        data = { message: await response.text() };
+      }
 
-      if (formData.sendType === "individual") setPhoneNumbers([]);
-      if (formData.sendType === "bulk") setBulkFile(null);
+      if (!response.ok) throw new Error(data.message || "Request failed");
+
+      showAlert(
+        "success",
+        formData.sendType === "bulk"
+          ? "Bulk contacts uploaded and added to group successfully!"
+          : "SMS sent successfully!"
+      );
+
+      // Reset form
       setFormData({ ...formData, message: "" });
-      setSelectedFile("");
-      setSelectedGroup("");
+      setPhoneNumbers([]);
       setCurrentPhone("");
+      setBulkFile(null);
+      setSelectedFile("");
+      setBulkGroupName("");
+      setSelectedGroup("");
     } catch (err) {
-      showAlert("error", err.message || "Something went wrong");
+      showAlert("error", err.message || "Something went wrong. Please try again.");
     } finally {
       setSending(false);
     }
@@ -154,19 +196,21 @@ export default function SMSSendUI() {
 
   return (
     <div className="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100 p-6">
+      {/* Sidebar can be added if needed */}
+      <div className="flex-1 flex flex-col overflow-hidden p-6">
+        <Header />
+      </div>
+
       <div className="max-w-4xl mx-auto">
         {alert && (
           <div
             className={`mb-6 p-4 rounded-lg shadow-lg flex items-center gap-3 ${
               alert.type === "success"
                 ? "bg-green-100 border-l-4 border-green-500 text-green-800"
-                : alert.type === "error"
-                ? "bg-red-100 border-l-4 border-red-500 text-red-800"
-                : "bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800"
+                : "bg-red-100 border-l-4 border-red-500 text-red-800"
             }`}
           >
-            {alert.type === "success" && <Check className="w-6 h-6" />}
-            {(alert.type === "error" || alert.type === "warning") && <AlertCircle className="w-6 h-6" />}
+            {alert.type === "success" ? <Check className="w-6 h-6" /> : <AlertCircle className="w-6 h-6" />}
             <span className="flex-1 font-medium">{alert.message}</span>
             <button onClick={() => setAlert(null)} className="hover:opacity-70">
               <X className="w-5 h-5" />
@@ -180,99 +224,90 @@ export default function SMSSendUI() {
               <Send className="w-8 h-8" />
               Send SMS Message
             </h1>
-            <p className="mt-2 text-blue-100">Send messages to individuals, groups, or in bulk</p>
+            <p className="mt-2 text-blue-100">Send messages to individuals, groups, or upload contacts in bulk</p>
           </div>
 
           <div className="p-8">
-            {/* Send Type Buttons */}
-            <div className="mb-6">
+            {/* Send Type */}
+            <div className="mb-8">
               <label className="block text-sm font-semibold text-gray-700 mb-3">Send Type</label>
               <div className="grid grid-cols-3 gap-4">
                 {["individual", "group", "bulk"].map((type) => {
                   const icons = { individual: User, group: Users, bulk: Upload };
-                  const colors = { individual: "teal", group: "blue", bulk: "blue" };
                   const Icon = icons[type];
                   return (
                     <button
                       key={type}
                       onClick={() => setFormData({ ...formData, sendType: type })}
-                      className={`p-4 rounded-lg border-2 transition-all ${
+                      className={`p-5 rounded-lg border-2 transition-all flex flex-col items-center ${
                         formData.sendType === type
-                          ? `border-${colors[type]}-600 bg-blue-50 text-${colors[type]}-700`
+                          ? "border-teal-600 bg-teal-50 text-teal-700"
                           : "border-gray-200 hover:border-gray-300"
                       }`}
                     >
-                      <Icon className="w-6 h-6 mx-auto mb-2" />
-                      <div className="font-semibold capitalize">{type}</div>
+                      <Icon className="w-8 h-8 mb-2" />
+                      <span className="font-semibold capitalize">{type}</span>
                     </button>
                   );
                 })}
               </div>
             </div>
-{/* Individual Phone Input with Filtered Suggestions */}
-{formData.sendType === "individual" && (
-  <div className="mb-6 relative">
-    <input
-      type="text"
-      value={currentPhone}
-      onChange={(e) => setCurrentPhone(e.target.value)}
-      placeholder="Type contact name or phone number"
-      className="border rounded-xl p-2 w-full"
-    />
 
-    {/* Suggestions Dropdown */}
-    {currentPhone.trim() && (
-      <ul className="absolute z-10 bg-white border rounded shadow mt-1 w-full max-h-48 overflow-auto">
-        {contacts
-          .filter(
-            (c) =>
-              c.name.toLowerCase().includes(currentPhone.toLowerCase()) ||
-              c.phoneNo.includes(currentPhone)
-          )
-          .map((c) => (
-            <li
-              key={c.id}
-              className="p-2 hover:bg-gray-200 cursor-pointer"
-              onClick={() => {
-                if (!phoneNumbers.includes(c.phoneNo)) {
-                  setPhoneNumbers([...phoneNumbers, c.phoneNo]);
-                  setCurrentPhone("");
-                  showAlert("success", `${c.name} added to recipients`);
-                }
-              }}
-            >
-              {c.name} ({c.phoneNo})
-            </li>
-          ))}
-      </ul>
-    )}
-
-    {/* Selected Phone Numbers */}
-    <div className="mt-2 flex flex-wrap gap-2">
-      {phoneNumbers.map((p) => (
-        <span key={p} className="bg-gray-200 px-2 py-1 rounded flex items-center gap-1">
-          {p}
-          <X
-            size={14}
-            onClick={() => removePhoneNumber(p)}
-            className="cursor-pointer"
-          />
-        </span>
-      ))}
-    </div>
-  </div>
-)}
-
-            {/* Group Selection */}
-            {formData.sendType === "group" && (
+            {/* Individual */}
+            {formData.sendType === "individual" && (
               <div className="mb-6 relative">
+                <input
+                  type="text"
+                  value={currentPhone}
+                  onChange={(e) => setCurrentPhone(e.target.value)}
+                  placeholder="Search by name or phone number"
+                  className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                />
+                {currentPhone && (
+                  <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto">
+                    {contacts
+                      .filter((c) =>
+                        c.name.toLowerCase().includes(currentPhone.toLowerCase()) || c.phoneNo.includes(currentPhone)
+                      )
+                      .map((c) => (
+                        <li
+                          key={c.id}
+                          className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                          onClick={() => {
+                            if (!phoneNumbers.includes(c.phoneNo)) {
+                              setPhoneNumbers([...phoneNumbers, c.phoneNo]);
+                              setCurrentPhone("");
+                              showAlert("success", `${c.name} added`);
+                            }
+                          }}
+                        >
+                          {c.name} <span className="text-gray-500">({c.phoneNo})</span>
+                        </li>
+                      ))}
+                  </ul>
+                )}
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {phoneNumbers.map((p) => (
+                    <span key={p} className="bg-gray-200 px-3 py-1 rounded-full text-sm flex items-center gap-2">
+                      {p}
+                      <X size={16} onClick={() => removePhoneNumber(p)} className="cursor-pointer hover:text-red-600" />
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Group */}
+            {formData.sendType === "group" && (
+              <div className="mb-6">
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Select Group</label>
                 <select
                   value={selectedGroup}
+                  placeholder="Select a group"
                   onChange={(e) => setSelectedGroup(e.target.value)}
-                  className="w-full border rounded-xl p-3 shadow-sm focus:ring-2 focus:ring-teal-500 hover:border-teal-500 transition"
+                  className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-500"
                 >
-                  <option value="">-- Select a Group --</option>
+                  <option value="">--Choose a group-- </option>
                   {groups.map((g) => (
                     <option key={g.id} value={g.id}>
                       {g.name} ({g.contactCount ?? 0} contacts)
@@ -282,52 +317,66 @@ export default function SMSSendUI() {
               </div>
             )}
 
-            {/* Bulk Upload */}
+            {/* Bulk */}
             {formData.sendType === "bulk" && (
-              <div className="mb-6">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Upload CSV File</label>
-                <div
-                  className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-xl p-6 cursor-pointer hover:border-teal-500 transition"
-                  onClick={() => document.getElementById("bulkFileInput").click()}
-                >
-                  <Upload className="w-10 h-10 text-gray-400 mb-2" />
-                  <p className="text-gray-500">
-                    {selectedFile
-                      ? `Selected File: ${selectedFile}`
-                      : "Click or drag a CSV file here to upload"}
-                  </p>
+              <>
+                <div className="mb-6">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Upload CSV File</label>
+                  <div
+                    className="border-2 border-dashed border-gray-300 rounded-xl p-10 text-center cursor-pointer hover:border-teal-500 transition"
+                    onClick={() => document.getElementById("bulkFileInput").click()}
+                  >
+                    <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600">
+                      {selectedFile ? `Selected: ${selectedFile}` : "Click to upload or drag CSV file here"}
+                    </p>
+                    <input
+                      id="bulkFileInput"
+                      type="file"
+                      accept=".csv"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                  </div>
+                </div>
+
+                <div className="mb-6">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Group Name</label>
                   <input
-                    id="bulkFileInput"
-                    type="file"
-                    accept=".csv"
-                    onChange={handleFileChange}
-                    className="hidden"
+                    type="text"
+                    value={bulkGroupName}
+                    onChange={(e) => setBulkGroupName(e.target.value)}
+                    placeholder="e.g., Customers 2025, VIP Members"
+                    className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-500"
                   />
                 </div>
-              </div>
+              </>
             )}
 
             {/* Message */}
-            <div className="mb-6 ">
-              <textarea
-                rows="5"
-                value={formData.message}
-                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                placeholder="Type your message"
-                className="border rounded-xl p-2 w-full"
-              />
-              <p>
-                {characterCount} characters / {messageCount} SMS
-              </p>
-            </div>
+            {formData.sendType !== "bulk" && (
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Message</label>
+                <textarea
+                  rows="6"
+                  value={formData.message}
+                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                  placeholder="Write your message here..."
+                  className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-500 resize-none"
+                />
+                <p className="text-sm text-gray-600 mt-2">
+                  {characterCount} characters • {messageCount} SMS part{messageCount > 1 ? "s" : ""}
+                </p>
+              </div>
+            )}
 
-            {/* Send Button */}
+            {/* Submit */}
             <button
               onClick={handleSendSMS}
               disabled={sending}
-              className="bg-teal-600 text-white px-6 py-3 rounded disabled:opacity-50"
+              className="w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-4 rounded-xl disabled:opacity-60 disabled:cursor-not-allowed transition"
             >
-              {sending ? "Sending..." : "Send SMS"}
+              {sending ? "Processing..." : formData.sendType === "bulk" ? "Upload Contacts to Group" : "Send SMS Now"}
             </button>
           </div>
         </div>
