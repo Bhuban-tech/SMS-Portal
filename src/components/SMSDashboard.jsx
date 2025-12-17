@@ -15,6 +15,7 @@ import TopRecipients from "./TopRecipients";
 import GroupPage from "@/app/contacts/groups/page";
 import SMSFilesPage from "@/app/sms-files/page";
 import BalanceReportPage from "@/app/balance-report/page";
+import { useRouter } from "next/navigation";
 
 const SMSDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -103,6 +104,10 @@ const SMSDashboard = () => {
     setTimeout(() => setStatus(null), 5000);
   };
 
+  const router = useRouter();
+ 
+
+
   return (
     <div className="flex h-screen bg-linear-to-br from-gray-50 to-gray-100 overflow-hidden">
       <button
@@ -151,10 +156,13 @@ const SMSDashboard = () => {
                 <>
                   <TopStats dashboardData={dashboardData} />
                   <div className="flex gap-4 overflow-x-auto pb-3">
-                    <button className="px-6 py-3 bg-teal-600 text-white rounded-xl font-semibold shadow-md hover:bg-teal-700 transition whitespace-nowrap">
+                    <button className="px-6 py-3 bg-teal-600 text-white rounded-xl font-semibold shadow-md hover:bg-teal-700 transition whitespace-nowrap"
+                      onClick={() => router.push('/daily-reports')}>
                       Daily Report
                     </button>
-                    <button className="px-6 py-3 bg-gray-200 text-slate-700 rounded-xl font-semibold border border-gray-300 hover:bg-gray-300 transition whitespace-nowrap">
+                    <button className="px-6 py-3 bg-gray-200 text-slate-700 rounded-xl font-semibold border border-gray-300 hover:bg-gray-300 transition whitespace-nowrap"
+                     onClick={() => router.push('/monthly-reports')}
+                    >
                       Monthly Report
                     </button>
                   </div>
