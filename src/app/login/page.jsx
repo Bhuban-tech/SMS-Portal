@@ -29,9 +29,10 @@ export default function LoginPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+        
         },
         body: JSON.stringify({
-          login,   // backend can accept username OR email
+          login,  
           password,
         }),
       });
@@ -43,7 +44,7 @@ export default function LoginPage() {
         return;
       }
 
-      // Store auth data
+
       localStorage.setItem("token", data.data.token);
       localStorage.setItem("adminId", data.data.id.toString());
       localStorage.setItem("username", data.data.username);
@@ -75,7 +76,7 @@ export default function LoginPage() {
 
         <form onSubmit={handleLogin} className="space-y-6">
           
-          {/* Username / Email */}
+     
           <div>
             <label className="block text-gray-600 font-bold mb-2">
               Username or Email
@@ -89,7 +90,7 @@ export default function LoginPage() {
             />
           </div>
 
-          {/* Password */}
+         
           <div>
             <label className="block text-gray-600 font-bold mb-2">
               Password
@@ -103,7 +104,7 @@ export default function LoginPage() {
             />
           </div>
 
-          {/* Submit */}
+       
           <button
             type="submit"
             disabled={loading}

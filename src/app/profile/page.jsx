@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { User, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { API_BASE_URL, ENDPOINTS } from '@/config/api';
+import { toast } from 'sonner';
 
 export default function Profile() {
   const router = useRouter();
@@ -24,7 +25,7 @@ export default function Profile() {
 
   const token = localStorage.getItem('token');
 
-  // Load adminId
+ 
   useEffect(() => {
     const stored = localStorage.getItem('adminId');
     if (!stored) {
@@ -34,7 +35,7 @@ export default function Profile() {
     }
   }, [router]);
 
-  // Fetch profile
+
   const fetchProfile = async (id) => {
     if (!token) return;
     try {
@@ -50,8 +51,7 @@ export default function Profile() {
         setUsername(data.data.username || '');
       }
     } catch (err) {
-      console.error('Fetch profile error:', err);
-      setMessage('Could not load profile');
+      toast.error('Could not load profile');
       setMessageType('error');
     }
   };
@@ -72,7 +72,7 @@ export default function Profile() {
       return;
     }
 
-    // Validate password if changing
+  
     if (currentPassword || newPassword || confirmPassword) {
       if (!currentPassword) {
         setMessage('Current password is required to set a new one');
@@ -122,7 +122,7 @@ export default function Profile() {
         throw new Error(result.message || `Server error ${response.status}`);
       }
 
-      setMessage(result.message || 'Profile updated successfully!');
+      toast.success (result.message || 'Profile updated successfully!');
       setMessageType('success');
 
       setCurrentPassword('');
@@ -159,7 +159,7 @@ export default function Profile() {
   return (
     <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
       <div className="w-full max-w-2xl bg-white rounded-2xl shadow-xl overflow-hidden">
-        {/* Header */}
+      
         <div className="flex items-center gap-4 px-6 py-4 bg-teal-600">
           <button
             onClick={() => router.back()}
@@ -171,7 +171,6 @@ export default function Profile() {
           <h1 className="text-2xl font-bold text-white">Edit Profile</h1>
         </div>
 
-        {/* Body */}
         <div className="p-8 space-y-6">
           {message && (
             <div
