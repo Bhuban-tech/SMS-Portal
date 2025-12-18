@@ -5,6 +5,7 @@ import { Send, X, Check, AlertCircle, Users, User, Upload } from "lucide-react";
 import { API_BASE_URL, ENDPOINTS } from "@/config/api";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
+import { toast } from "sonner";
 
 export default function SMSSendUI() {
   const [formData, setFormData] = useState({ message: "", sendType: "individual" });
@@ -83,7 +84,7 @@ export default function SMSSendUI() {
   };
 
   const handleSendSMS = async () => {
-    // Validation
+    
     if (formData.sendType !== "bulk" && !formData.message.trim())
       return showAlert("error", "Please enter a message");
 
@@ -118,7 +119,7 @@ export default function SMSSendUI() {
           body: JSON.stringify(body),
         });
       } 
-      // Group
+     
       else if (formData.sendType === "group") {
         const body = {
           senderId: adminId,
@@ -132,7 +133,7 @@ export default function SMSSendUI() {
           body: JSON.stringify(body),
         });
       } 
-      // Bulk
+      
       else if (formData.sendType === "bulk") {
         const form = new FormData();
         form.append("file", bulkFile);
@@ -158,7 +159,7 @@ export default function SMSSendUI() {
 
       if (!response) throw new Error("No response from server");
 
-      // Parse JSON safely
+    
       let data;
       const contentType = response.headers.get("content-type");
       if (contentType && contentType.includes("application/json")) {
@@ -169,15 +170,14 @@ export default function SMSSendUI() {
 
       if (!response.ok) throw new Error(data.message || "Request failed");
 
-      showAlert(
-        "success",
+      
+      toast.success(
         formData.sendType === "bulk"
           ? "Bulk contacts uploaded and added to group successfully!"
           : "SMS sent successfully!"
       );
 
-      // Reset form
-      setFormData({ ...formData, message: "" });
+      // Reset form   setFormData({ ...formData, message: "" });
       setPhoneNumbers([]);
       setCurrentPhone("");
       setBulkFile(null);
@@ -185,7 +185,7 @@ export default function SMSSendUI() {
       setBulkGroupName("");
       setSelectedGroup("");
     } catch (err) {
-      showAlert("error", err.message || "Something went wrong. Please try again.");
+      toast.error(err.message || "Something went wrong. Please try again.");
     } finally {
       setSending(false);
     }

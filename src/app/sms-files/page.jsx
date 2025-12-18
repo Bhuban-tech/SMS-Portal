@@ -24,7 +24,6 @@ function SMSFilesPage() {
   const [loading, setLoading] = useState(true);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
-  const [newFile, setNewFile] = useState({ fileName: "", fileType: "", size: "" });
   const [bulkGroupName, setBulkGroupName] = useState("");
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [fileToDelete, setFileToDelete] = useState(null);
@@ -33,7 +32,9 @@ function SMSFilesPage() {
 
   const [token, setToken] = useState("");
   const [adminId, setAdminId] = useState(0);
+  const [newGroupName, setNewGroupName] = useState("");
 
+  // Load token and adminId from localStorage
   useEffect(() => {
     if (typeof window !== "undefined") {
       const storedToken = localStorage.getItem("token");
@@ -43,6 +44,7 @@ function SMSFilesPage() {
     }
   }, []);
 
+  // Fetch all groups
   const fetchFiles = async () => {
     if (!token) {
       setLoading(false);
@@ -76,27 +78,31 @@ function SMSFilesPage() {
     fetchFiles();
   }, [token]);
 
+  // Open edit modal
   const openEditModal = (file) => {
     setSelectedFile(file);
-    setNewFile({
-      fileName: file.fileName || "",
-      fileType: file.fileType || "",
-      size: file.size || "",
-    });
+    setNewGroupName(file.name || "");
     setEditModalOpen(true);
   };
 
+  // Save edited group name - NOW REFETCHES DATA AFTER UPDATE
   const handleSaveEdit = async () => {
     if (!selectedFile?.id) return;
+
+    const trimmedName = newGroupName.trim();
+    if (!trimmedName) {
+      toast.warning("Group name cannot be empty");
+      return;
+    }
 
     try {
       const res = await fetch(`${API_BASE_URL}/api/groups/update/${selectedFile.id}`, {
         method: "PUT",
         headers: {
-          // "Content-Type": "multipart/form-data",
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(newFile),
+        body: JSON.stringify({ name: trimmedName }),
       });
 
       if (!res.ok) {
@@ -104,91 +110,83 @@ function SMSFilesPage() {
         throw new Error(errorData.message || "Failed to update group");
       }
 
-      const updatedGroup = await res.json();
-
-      setFiles((prev) =>
-        prev.map((f) => (f.id === selectedFile.id ? { ...f, ...updatedGroup } : f))
-      );
-
-      toast.success("Group details updated successfully!");
+      // Success: Close modal and show toast
+      toast.success("Group name updated successfully!");
       setEditModalOpen(false);
+      setNewGroupName("");
+
+      // CRITICAL FIX: Refetch fresh data from server
+      await fetchFiles();
+
     } catch (err) {
-      console.error(err);
+      console.error("Update error:", err);
       toast.error(err.message || "Failed to update group");
-      fetchFiles(); 
+
+      // Even on error, refetch to ensure UI matches server state
+      await fetchFiles();
     }
   };
 
-const handleUpload = async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
+  // Handle file upload
+  const handleUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-  const allowedTypes = ["csv", "xlsx"];
-  const extension = file.name.split(".").pop()?.toLowerCase();
+    const allowedTypes = ["csv", "xlsx"];
+    const extension = file.name.split(".").pop()?.toLowerCase();
 
-  if (!extension || !allowedTypes.includes(extension)) {
-    toast.warning("Only CSV or XLSX files are allowed");
-    e.target.value = null;
-    return;
-  }
+    if (!extension || !allowedTypes.includes(extension)) {
+      toast.warning("Only CSV or XLSX files are allowed");
+      e.target.value = null;
+      return;
+    }
 
-  if (!bulkGroupName.trim()) {
-    toast.warning("Please enter a group name");
-    e.target.value = null;
-    return;
-  }
+    if (!bulkGroupName.trim()) {
+      toast.warning("Please enter a group name");
+      e.target.value = null;
+      return;
+    }
 
-  const formData = new FormData();
-  formData.append("file", file);
+    const formData = new FormData();
+    formData.append("file", file);
 
-  const groupRequest = {
-    name: bulkGroupName.trim(),
-    senderId: adminId,
-  };
-   formData.append(
-    "groupRequest",
-    new Blob([JSON.stringify(groupRequest)], { type: "application/json" })
-  );
-
-  setUploading(true);
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/groups/contacts/bulk`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData,
-    });
-
-    const result = await res.json();
-
-    if (!res.ok) throw new Error(result.message || "Upload failed");
-
-    const newGroup = {
-      id: result.id,
-      fileName: result.fileName || file.name,
-      fileType: result.fileType || extension,
-      size: result.size || file.size,
-      groupName: result.groupName || result.name || bulkGroupName.trim(),
-      name: result.name || bulkGroupName.trim(),
-      createdAt: result.createdAt || new Date().toISOString(),
-      author: result.author || "admin college",
+    const groupRequest = {
+      name: bulkGroupName.trim(),
+      senderId: adminId,
     };
+    formData.append(
+      "groupRequest",
+      new Blob([JSON.stringify(groupRequest)], { type: "application/json" })
+    );
 
-    setFiles((prev) => [...prev, newGroup]);
-    toast.success("File uploaded and contacts added successfully!");
-    setBulkGroupName("");
-    if (fileInputRef.current) fileInputRef.current.value = "";
-    fetchFiles();
-  } catch (err) {
-    console.error("Upload error:", err);
-    toast.error(err.message || "Failed to upload file");
-  } finally {
-    setUploading(false);
-  }
-};
+    setUploading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/groups/contacts/bulk`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
 
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.message || "Upload failed");
 
+      toast.success("File uploaded and contacts added successfully!");
+      setBulkGroupName("");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+
+      // Refetch to get accurate latest list
+      await fetchFiles();
+    } catch (err) {
+      console.error("Upload error:", err);
+      toast.error(err.message || "Failed to upload file");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // Delete group
   const handleDeleteClick = (file) => {
     setFileToDelete(file);
     setDeleteModalOpen(true);
@@ -208,12 +206,14 @@ const handleUpload = async (e) => {
         throw new Error(errorData.message || "Failed to delete");
       }
 
-      setFiles((prev) => prev.filter((f) => f.id !== fileToDelete.id));
       toast.success("Group deleted successfully!");
+
+      // Refetch after delete
+      await fetchFiles();
     } catch (err) {
       console.error(err);
       toast.error(err.message || "Failed to delete group");
-      fetchFiles(); // fallback
+      await fetchFiles();
     } finally {
       setDeleteModalOpen(false);
       setFileToDelete(null);
@@ -221,7 +221,7 @@ const handleUpload = async (e) => {
   };
 
   const filteredFiles = files.filter((f) =>
-    (f.groupName || f.name || "").toLowerCase().includes(search.toLowerCase()) ||
+    (f.name || "").toLowerCase().includes(search.toLowerCase()) ||
     (f.fileName || "").toLowerCase().includes(search.toLowerCase())
   );
 
@@ -236,6 +236,7 @@ const handleUpload = async (e) => {
       <div className="flex-1 flex flex-col overflow-hidden p-6">
         <Header />
         <main className="flex-1 overflow-auto p-6">
+          {/* Search and Upload */}
           <div className="flex justify-between items-center mb-6">
             <div className="relative w-72">
               <input
@@ -277,6 +278,7 @@ const handleUpload = async (e) => {
             </div>
           </div>
 
+          {/* Files Table */}
           <div className="rounded-2xl bg-white shadow-xl p-4 overflow-x-auto">
             <table className="w-full text-sm text-center">
               <thead>
@@ -317,11 +319,9 @@ const handleUpload = async (e) => {
                       <td className="p-3">{row.fileName || "-"}</td>
                       <td className="p-3 uppercase">{row.fileType || "-"}</td>
                       <td className="p-3">{row.size || "-"}</td>
-                      <td className="p-3 font-medium">{row.groupName || row.name || "-"}</td>
+                      <td className="p-3 font-medium">{row.name || "-"}</td>
                       <td className="p-3">
-                        {row.createdAt
-                          ? new Date(row.createdAt).toLocaleString()
-                          : "-"}
+                        {row.createdAt ? new Date(row.createdAt).toLocaleString() : "-"}
                       </td>
                       <td className="p-3 flex gap-3 justify-center">
                         <button className="bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600">
@@ -357,24 +357,13 @@ const handleUpload = async (e) => {
                 >
                   <X />
                 </button>
-                <h2 className="text-xl font-bold mb-4">Edit Group</h2>
-                <label className="text-sm text-gray-600 block mb-1">File Name</label>
+                <h2 className="text-xl font-bold mb-4">Edit Group Name</h2>
+                <label className="text-sm text-gray-600 block mb-1">Group Name</label>
                 <input
                   className="w-full border rounded p-2 mb-3"
-                  value={newFile.fileName}
-                  onChange={(e) => setNewFile({ ...newFile, fileName: e.target.value })}
-                />
-                <label className="text-sm text-gray-600 block mb-1">File Type</label>
-                <input
-                  className="w-full border rounded p-2 mb-3"
-                  value={newFile.fileType}
-                  onChange={(e) => setNewFile({ ...newFile, fileType: e.target.value })}
-                />
-                <label className="text-sm text-gray-600 block mb-1">Size</label>
-                <input
-                  className="w-full border rounded p-2 mb-4"
-                  value={newFile.size}
-                  onChange={(e) => setNewFile({ ...newFile, size: e.target.value })}
+                  value={newGroupName}
+                  onChange={(e) => setNewGroupName(e.target.value)}
+                  autoFocus
                 />
                 <button
                   onClick={handleSaveEdit}
@@ -393,8 +382,7 @@ const handleUpload = async (e) => {
                 <h2 className="text-xl font-bold mb-4">Confirm Delete</h2>
                 <p className="mb-6">
                   Are you sure you want to delete the group "
-                  <strong>{fileToDelete?.groupName || fileToDelete?.name}</strong>
-                  "? This action cannot be undone.
+                  <strong>{fileToDelete?.name}</strong>"? This action cannot be undone.
                 </p>
                 <div className="flex justify-end gap-4">
                   <button

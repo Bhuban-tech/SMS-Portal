@@ -1,5 +1,5 @@
 
-export const API_BASE_URL = "http://192.168.110.238:8080"; 
+export const API_BASE_URL = "http://192.168.110.233:8080"; 
 export const ENDPOINTS = {
   //auth
   LOGIN: "/api/auth/login",
