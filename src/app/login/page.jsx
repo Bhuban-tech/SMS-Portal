@@ -47,13 +47,13 @@ export default function LoginPage() {
       }
 
   
-      document.cookie = `token=${data.data.token}; path=/dashboard`;
+      localStorage.setItem("token", data.data.token);
       localStorage.setItem("adminId", data.data.id.toString());
       localStorage.setItem("username", data.data.username);
       localStorage.setItem("email", data.data.email || "");
 
       
-      toast.success("Login tw bhayo tara karan dai pagal hoo....");
+      toast.success("Login successfull!");
 
     
       setTimeout(() => {

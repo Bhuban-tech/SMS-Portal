@@ -10,14 +10,14 @@ export const ENDPOINTS = {
   UPDATE_ADMIN: (id) => `/api/admins/update/${id}`,
 
 
-  //individual contacts
+  
   CREATE_CONTACT: "/api/contacts/add",
   UPDATE_CONTACT: (id) => `/api/contacts/update/${id}`,
   DELETE_CONTACT: (id) => `/api/contacts/delete/${id}`,
   GET_ALL_CONTACTS: "/api/contacts/all",
 
 
-  //groups
+ 
   GET_ALL_GROUPS: "/api/groups/all",
   CREATE_GROUP: "/api/groups/create",
   UPDATE_GROUP: (id) => `/api/groups/update/${id}`,
@@ -26,9 +26,6 @@ export const ENDPOINTS = {
   GET_GROUP_CONTACTS: (id) => `/api/groups/${id}`,
   BULK_ADD_CONTACTS_TO_GROUP: (groupId) => `/api/groups/${groupId}/contacts/bulk`,
 
-  //messages
-
-
-  
+ 
 
 };
